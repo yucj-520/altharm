@@ -142,9 +142,11 @@ def bands_input(
         ``K_POINTS`` card below, so it must be the same value later passed
         to :func:`cart_to_tpiba`/:func:`tpiba_to_cart`.
     cell_ang : array_like, shape (3, 3)
-        Lattice vectors as rows, Angstrom. Written as ``CELL_PARAMETERS
-        angstrom`` (explicit units) rather than in ``alat`` units, so the
-        cell's physical size is never left to be inferred from celldm(1).
+        Lattice vectors as rows, Angstrom. Written out in ``alat`` units,
+        divided by ``alat_bohr``, because QE stops with "lattice parameter
+        specified twice" if ``celldm(1)`` and an explicitly-dimensioned
+        ``CELL_PARAMETERS`` are both given. ``celldm(1)`` is the one kept, since
+        it is what defines ``tpiba`` for the k-point card.
     species : sequence of (symbol, mass_amu, pseudo_filename)
     positions_ang : sequence of (symbol, x, y, z), Cartesian, Angstrom
     kcart_tpiba, weights : see :func:`kpoints_card`.
@@ -237,9 +239,16 @@ def bands_input(
     for symbol, x, y, z in positions_ang:
         lines.append(f"  {symbol} {x:.10f} {y:.10f} {z:.10f}")
 
-    lines.append("CELL_PARAMETERS angstrom")
-    for row in cell_ang:
-        lines.append(f"  {row[0]:.10f} {row[1]:.10f} {row[2]:.10f}")
+    # QE refuses "lattice parameter specified twice": with celldm(1) present,
+    # CELL_PARAMETERS must be in alat units, not angstrom.  Real pw.x 7.2 stops
+    # at cell_base_init with that exact message otherwise.  We keep celldm(1)
+    # rather than dropping it, because it is what fixes the meaning of "tpiba"
+    # in the K_POINTS card below -- and an ambiguous tpiba would silently put
+    # the circle at the wrong radius.
+    lines.append("CELL_PARAMETERS alat")
+    alat_ang = alat_bohr * BOHR_ANG
+    for row in np.asarray(cell_ang, dtype=float) / alat_ang:
+        lines.append(f"  {row[0]:.12f} {row[1]:.12f} {row[2]:.12f}")
 
     lines.append(kpoints_card(kcart_tpiba, weights=weights).rstrip("\n"))
 

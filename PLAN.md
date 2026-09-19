@@ -104,7 +104,25 @@ compared against. A second, independent estimate of the same floor: run the froz
 calculation twice from two different converged starting densities (or two SCF thresholds) and
 see whether the forbidden-$l$ amplitude moves.
 
-**Measured:** not yet.
+**Measured: the interface is validated, the noise floor is not.**
+`bands_input` and `read_bands` have been round-tripped through real
+Quantum ESPRESSO 7.2 on bcc iron (LSDA, ONCV, 80 Ry, a 24-point circle of radius
+0.40 $2\pi/a$). Against the eigenvalues `pw.x` printed — a different code path
+inside QE from the XML, parsed in the test by its own regex — the reader agrees
+to **5e-5 eV**, which is the four-decimal rounding of the text output and so the
+best this comparison can resolve. $E_F$ and `alat` match the inputs. All 24
+k-points came back unfolded, at exactly the requested radius, in order, which is
+what `nosym`/`noinv` are there for. The run is committed under
+`tests/data/qe_fe_bands/`.
+
+**A bug this phase found that no unit test could.** The writer generated an
+input `pw.x` rejects outright: `celldm(1)` and `CELL_PARAMETERS angstrom`
+together give *"lattice parameter specified twice"* from `cell_base_init`. Every
+synthetic test passed on that input. Fixed by writing the cell in `alat` units
+and keeping `celldm(1)`, since `celldm(1)` is what defines `tpiba`.
+
+**Still open, and it is the whole feasibility question:** the noise floor itself,
+on a real altermagnet, with the forbidden harmonics measuring it.
 
 ## P4 — Basis-set discontinuity sizing
 

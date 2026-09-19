@@ -162,8 +162,8 @@ not yet been run on a real altermagnet. 64 tests pass.
 |---|---|
 | **Written and tested** | `units.py`; `basis.py` (circular and real-spherical bases); `kpath.py` (circles and sphere quadrature, built in Cartesian axes); `symmetry.py` (the numerical projector, plus the `symprec` guard below); `project.py` (least squares, amplitude and phase per $l$); `noise.py` (the forbidden-$l$ floor); `wannier.py` (`hr.dat`, $H(k)$, and the truncation study); `qe/` (input writer and XML eigenvalue reader) |
 | **Validated against real data** | the Wannier route, on the group's Cr2SeAs v03 model — see below |
-| **Written but not yet exercised on real output** | the QE route: `qe/writer.py` and `qe/reader.py` are tested against hand-built inputs and a synthetic `data-file-schema.xml`, not yet against a file `pw.x` actually produced |
-| **Not started** | the defumat route; production runs; the 3D spherical-harmonic path beyond its unit tests |
+| **Validated against real `pw.x` output** | the QE route: a bcc-iron LSDA run made with `bands_input` and read back with `read_bands` agrees with the eigenvalues QE printed to 5e-5 eV, which is the text output's own rounding. The run is committed under `tests/data/qe_fe_bands/` |
+| **Not started** | the QE route on a real altermagnet (the noise-floor question); the defumat route; the 3D spherical-harmonic path beyond its unit tests |
 
 ### What has been measured
 
@@ -187,6 +187,20 @@ $\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
   $l=21$ falls by a factor of six while $l=3$ moves by a third. The falloff is
   not monotonic, which is what the Bessel picture above predicts and what a
   simple exponential-damping story would miss.
+
+### What running real QE changed
+
+The QE writer passed every test against hand-built strings and still produced an
+input `pw.x` refuses: `celldm(1)` together with `CELL_PARAMETERS angstrom` stops
+the code with *"lattice parameter specified twice"*. The cell is now written in
+`alat` units, keeping `celldm(1)` — because that is what fixes the meaning of
+`tpiba` in the k-point card, and an ambiguous `tpiba` would put the circle at
+the wrong radius without saying so. `tests/test_qe_real_output.py` regresses on
+the generated input as well as on the parsed output.
+
+The same run confirms the point of `nosym`/`noinv`: all 24 requested k-points
+came back, each at exactly the requested radius and in the order given, rather
+than folded into the irreducible wedge.
 
 ### One trap worth knowing before you use this
 

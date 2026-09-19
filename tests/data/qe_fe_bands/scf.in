@@ -1,0 +1,26 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'fe' , outdir = './tmp'
+  pseudo_dir = '/scratch/work/yuc11/sg15_oncv_upf'
+  tprnfor = .true.
+/
+&SYSTEM
+  ibrav = 0 , nat = 1 , ntyp = 1
+  ecutwfc = 80
+  nspin = 2 , starting_magnetization(1) = 0.3
+  occupations = 'smearing' , smearing = 'mv' , degauss = 0.02
+/
+&ELECTRONS
+  conv_thr = 1.0d-10
+  mixing_beta = 0.3
+/
+ATOMIC_SPECIES
+ Fe 55.845 Fe_ONCV_PBE-1.2.upf
+CELL_PARAMETERS angstrom
+  1.435  1.435  1.435
+ -1.435  1.435  1.435
+ -1.435 -1.435  1.435
+ATOMIC_POSITIONS crystal
+ Fe 0.0 0.0 0.0
+K_POINTS automatic
+ 8 8 8 0 0 0
