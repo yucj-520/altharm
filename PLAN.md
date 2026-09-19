@@ -227,6 +227,49 @@ anything this route finds that Wannier didn't.
 
 **Measured:** not yet.
 
+## P9 — A QE-native tool: harmonics computed inside a compiled QE executable
+
+**Establishes:** that the harmonic fit and the magnetic-symmetry classification can be computed
+directly by a new compiled Quantum ESPRESSO executable, `harmwave.x` (`qe_native/harmwave.f90`),
+built the way `bands.x`/`dos.x` are -- linked against QE's own `PP/src`/`PW/src` libraries,
+reading a finished `bands` run through QE's own `read_file()`. It uses QE's own `find_sym()`
+(with the magnetic sublattices collapsed to their true chemical species via the pseudopotential's
+`psd` field, not `ityp`) for symmetry, and LAPACK's `DGELSS` directly on the in-memory Rydberg
+eigenvalues for the fit -- no XML parsing, no spglib, no numpy.
+
+**Independent check:** exactly the point of building it. Two implementations sharing no
+language, no symmetry engine, no linear-algebra library and no unit-conversion path, run on the
+same real Cr2SeAs data, are compared coefficient by coefficient.
+
+**Measured:** built and validated once, on the group's real Cr2SeAs run (PBE+U, USPP, 56-point
+circle at $k_z = 0.25\,b_3$, band nearest $E_F$):
+
+- eigenvalue differences $\Delta E(\theta)$: Fortran (QE's `et`, Ry$\to$eV) vs Python (XML,
+  Ha$\to$eV) agree to $10^{-9}$ eV, run in run out of the same underlying k-point list.
+- the fitted $(a_l, b_l)$: LAPACK `DGELSS` vs `numpy.linalg.lstsq`, agree to $10^{-9}$ eV
+  coefficient by coefficient, for every $l = 0..12$.
+- the operation list QE's own `find_sym()` derived, fed into `altharm.symmetry.allowed_harmonics`,
+  reproduces the $\{3, 9\}$ selection rule exactly where the independently-fitted real signal
+  is (allowed amplitudes over 100$\times$ the forbidden floor) -- see
+  `tests/test_harmwave_cross_check.py` and `tests/data/harmwave_cr2seas/`.
+
+**A bug this phase found that a clean compile could not.** A first version's time-reversal
+closure only doubled operations that had *already* survived the plane-preservation filter for
+the given circle. Cr2SeAs's sublattice-exchanging mirror flips $k_z$ on its own and so fails
+that filter directly; its time-reversed partner (which restores $k_z$) needs the mirror in a
+closure taken over the *full* symmetry group, before filtering -- not after. The bug compiled
+cleanly, ran to completion, and reported the allowed set as $\{0,3,6,9,12\}$ instead of
+$\{3,9,15,\ldots\}$: over-inclusive, and not obviously wrong from the fit alone, since $l=0,6,12$
+still came out numerically tiny. Only feeding the tool's own operator dump back into
+`altharm.symmetry.allowed_harmonics()` and comparing the predicted rule against where the real
+signal landed caught it.
+
+**Scope of v1, honestly not yet general:** collinear LSDA only; the circle must lie in the
+$k_x k_y$ plane at fixed $k_z$ (hardcoded); band identity is given explicitly rather than
+tracked (`altharm.bandtrack`'s continuity tracking is not yet ported to Fortran); symmetrization
+and the noise-floor split stay in the already-tested Python code rather than being duplicated in
+Fortran. See `qe_native/README.md`.
+
 ## Numerical traps, indexed by the phase that has to deal with each
 
 These are described with their physical reasoning in `README.md`; this is where the number

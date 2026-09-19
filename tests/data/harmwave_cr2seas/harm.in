@@ -1,0 +1,12 @@
+&inputpp
+  prefix = 'AB'
+  outdir = '../tmp'
+  lmax = 12
+  band_index = 23
+  magmom(1) = 1.0
+  magmom(2) = -1.0
+  magmom(3) = 0.0
+  magmom(4) = 0.0
+  moment_tol = 1.0d-3
+  report_file = 'harmwave_report.txt'
+/
