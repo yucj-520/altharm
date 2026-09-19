@@ -11,3 +11,4 @@ dist/
 tmp/
 out/
 runs/
+quantum_espresso/

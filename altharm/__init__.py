@@ -9,6 +9,7 @@ from .symmetry import SpinOp, spin_operations, symmetrizer, allowed_harmonics, a
 from .noise import NoiseReport, noise_report
 from .symmetry import SymmetryToleranceError, symprec_scan, format_symprec_scan
 from .bandtrack import TrackedBand, track_by_continuity
+from .planewaves import count_planewaves, parse_pw_count, discontinuity_spectrum
 from . import wannier, qe
 
 __version__ = "0.0.1"
@@ -21,5 +22,6 @@ __all__ = [
     "NoiseReport", "noise_report",
     "SymmetryToleranceError", "symprec_scan", "format_symprec_scan",
     "TrackedBand", "track_by_continuity",
+    "count_planewaves", "parse_pw_count", "discontinuity_spectrum",
     "wannier", "qe",
 ]

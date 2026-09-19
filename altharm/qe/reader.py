@@ -242,29 +242,47 @@ def hubbard_is_active(xml_path):
     Returns
     -------
     (bool, dict)
-        Whether any non-zero U was applied, and the U values found, keyed by
-        the label QE recorded them under (empty when none).
-    """
-    import xml.etree.ElementTree as ET
+        Whether any non-zero U was applied, and the U values found in eV,
+        keyed by ``"specie-label"`` (e.g. ``"CrU-3d"``, matching the manifold
+        name a ``HUBBARD`` card uses) when both attributes are present, empty
+        when none.
 
+    Notes
+    -----
+    Measured on a real PBE+U run of Cr2SeAs: QE's XML stores ``Hubbard_U`` in
+    **Hartree**, like every other energy in this schema, not eV -- a run
+    given ``U CrU-3d 3.0`` (eV, the HUBBARD card's own unit) comes back as
+    ``1.102479665269648E-01`` in the XML, and
+    ``0.1102479665269648 * HARTREE_EV = 3.0000000000000018``. Skipping the
+    conversion silently reports a U about 27 times too small and fails every
+    comparison to the eV value the card asked for.
+
+    The same run also has one ``Hubbard_U`` element per **species**, each
+    carrying its own ``specie`` and ``label`` attributes -- ``CrU`` and
+    ``CrD`` both label their manifold ``"3d"``. Keying on ``label`` alone
+    collapses two distinct species onto one dictionary key, the second
+    silently overwriting the first; it went unnoticed on this run only
+    because CrU and CrD happen to carry the same U.
+    """
     root = ET.parse(str(xml_path)).getroot()
     found = {}
     for node in root.iter():
         tag = node.tag.split("}")[-1]
         if tag not in ("Hubbard_U", "U"):
             continue
-        label = (
-            node.attrib.get("label")
-            or node.attrib.get("specie")
-            or node.attrib.get("index")
-            or tag
-        )
+        specie = node.attrib.get("specie")
+        label = node.attrib.get("label")
+        if specie and label:
+            key = f"{specie}-{label}"
+        else:
+            key = specie or label or node.attrib.get("index") or tag
         try:
-            value = float((node.text or "").split()[0])
+            value_ha = float((node.text or "").split()[0])
         except (ValueError, IndexError):
             continue
-        if abs(value) > 0.0:
-            found[str(label)] = value
+        value_ev = value_ha * HARTREE_EV
+        if abs(value_ev) > 0.0:
+            found[str(key)] = value_ev
     return bool(found), found
 
 
