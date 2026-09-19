@@ -8,6 +8,7 @@ from .project import HarmonicFit, project, evaluate
 from .symmetry import SpinOp, spin_operations, symmetrizer, allowed_harmonics, allowed_l
 from .noise import NoiseReport, noise_report
 from .symmetry import SymmetryToleranceError, symprec_scan, format_symprec_scan
+from .bandtrack import TrackedBand, track_by_continuity
 from . import wannier, qe
 
 __version__ = "0.0.1"
@@ -19,5 +20,6 @@ __all__ = [
     "SpinOp", "spin_operations", "symmetrizer", "allowed_harmonics", "allowed_l",
     "NoiseReport", "noise_report",
     "SymmetryToleranceError", "symprec_scan", "format_symprec_scan",
+    "TrackedBand", "track_by_continuity",
     "wannier", "qe",
 ]
