@@ -155,23 +155,49 @@ installs them. The `dev` extra adds `pytest`, and `plot` adds matplotlib.
 
 ## Status
 
-Nothing here has been validated against a real material yet. Concretely:
+The harmonic machinery is written and tested; the DFT route is written but has
+not yet been run on a real altermagnet. 64 tests pass.
 
 | | |
 |---|---|
-| **Written** | `altharm/units.py` (constants), `altharm/basis.py` (orthonormal circular and real-spherical-harmonic bases — see the caveat below), `altharm/symmetry.py` (the numerical projector from magnetic space group to allowed $l$) |
-| **In progress** | the least-squares projection step that turns a design matrix and a set of $(\mathbf k,\Delta E)$ points into $a_l, b_l$; the noise-floor bookkeeping that separates forbidden-$l$ amplitude from allowed-$l$ amplitude; the QE interface (`altharm/qe/` exists as an empty package) |
-| **Not started** | the Wannier90 (`hr.dat`) route, the defumat route, any test against a real material, a committed test suite (`tests/` is currently empty) |
+| **Written and tested** | `units.py`; `basis.py` (circular and real-spherical bases); `kpath.py` (circles and sphere quadrature, built in Cartesian axes); `symmetry.py` (the numerical projector, plus the `symprec` guard below); `project.py` (least squares, amplitude and phase per $l$); `noise.py` (the forbidden-$l$ floor); `wannier.py` (`hr.dat`, $H(k)$, and the truncation study); `qe/` (input writer and XML eigenvalue reader) |
+| **Validated against real data** | the Wannier route, on the group's Cr2SeAs v03 model — see below |
+| **Written but not yet exercised on real output** | the QE route: `qe/writer.py` and `qe/reader.py` are tested against hand-built inputs and a synthetic `data-file-schema.xml`, not yet against a file `pw.x` actually produced |
+| **Not started** | the defumat route; production runs; the 3D spherical-harmonic path beyond its unit tests |
 
-**One caveat on what's already written:** `altharm/basis.py`'s module
-docstring calls both bases orthonormal. `SphericalBasis` is — its Gram matrix
-is the identity to $10^{-14}$ on a Gauss-Legendre quadrature. `CircularBasis`
-is only *orthogonal*: its Gram matrix under $\int_0^{2\pi}$ is
-$\mathrm{diag}(2\pi, \pi, \pi, \ldots)$, not the identity. This doesn't affect
-`symmetry.py`'s projector, which works in the basis's own coordinates and
-never assumes unit norm, but it will matter the moment a least-squares
-projection step is written and needs to know what "orthonormal" actually
-means here. `PLAN.md` P0 is where this gets settled.
+### What has been measured
+
+On the group's Cr2SeAs Wannier model (PBE+U, 38 orbitals per spin, 583
+$\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
+
+- The symmetry module, from the structure alone, allows exactly the **odd
+  multiples of three**, $l \in \{3, 9, 15, 21, \ldots\}$, and **nothing at all**
+  in the $k_z = 0$ plane. Both follow by hand: $C_{3z}$ preserves the magnetic
+  sublattices so $l$ must be a multiple of 3, while $M_z$ exchanges them and,
+  combined with time reversal, gives $C_{2z}$ with character $-1$, so $l$ must
+  be odd.
+- The Wannier Hamiltonian, which knows nothing of that prediction, puts
+  **59.5 meV at $l=3$** and **39.1 meV at $l=9$**, with every symmetry-forbidden
+  harmonic below 1.2 meV. The two largest harmonics are the two that are
+  allowed. That agreement is the cross-check.
+- In the $k_z=0$ plane, where symmetry forbids everything, the model returns
+  **below 0.07 meV**. That number is not physics — it is the Wannier model's own
+  angular error, and it is the floor the DFT route has to beat.
+- The high harmonics need in-plane hoppings out to **≈15 Å**. Cut to 4 Å and
+  $l=21$ falls by a factor of six while $l=3$ moves by a third. The falloff is
+  not monotonic, which is what the Bessel picture above predicts and what a
+  simple exponential-damping story would miss.
+
+### One trap worth knowing before you use this
+
+On this very structure, spglib reports the non-magnetic parent as **P3m1 with
+no sublattice-exchanging operation** for `symprec` $\le 10^{-5}$, and as
+**P-6m2 with six of them** for `symprec` $\ge 5\times10^{-5}$. The horizontal
+mirror maps every atom onto its partner to within $1.0\times10^{-5}$ Å, which
+is spglib's default tolerance — so the default silently describes an
+altermagnet as something that cannot be one, and every $l$ including $l=0$
+comes out allowed. `spin_operations` now refuses that case by name and points
+at `symprec_scan`. **Scan every new structure before believing its harmonics.**
 
 ## License
 
