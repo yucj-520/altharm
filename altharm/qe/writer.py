@@ -127,6 +127,13 @@ def bands_input(
     starting_magnetization=None,
     diago_thr_init: float = 1.0e-4,
     conv_thr: float = 1.0e-8,
+    positions_crystal=None,
+    occupations: str | None = None,
+    smearing: str | None = None,
+    degauss: float | None = None,
+    hubbard=None,
+    hubbard_projectors: str = "ortho-atomic",
+    extra_system=None,
 ) -> str:
     """Write a ``calculation='bands'`` pw.x input for a fixed, explicit k-list.
 
@@ -155,6 +162,28 @@ def bands_input(
     diago_thr_init, conv_thr : eigenvalue/SCF convergence thresholds -- see
         the comment below on why both matter even though this is not an SCF
         run.
+    positions_crystal : sequence of (symbol, x, y, z), fractional, optional
+        Given instead of ``positions_ang``, written as ``ATOMIC_POSITIONS
+        crystal``. Prefer this when the structure is naturally fractional.
+        Converting an exact 1/3 to Angstrom and back rounds it, and rounding
+        is precisely what costs a near-degenerate symmetry operation -- see
+        :func:`altharm.symmetry.symprec_scan`.
+    hubbard : sequence of (manifold, U_eV), optional
+        Written as a ``HUBBARD`` card, e.g. ``[("CrU-3d", 3.0)]``.
+
+        **This is not inherited.** A ``bands`` or ``nscf`` run reads the
+        charge density from the scf, but *not* its Hubbard parameters: omit
+        the card and QE silently does plain PBE on a PBE+U density, with no
+        warning and no error. Pass the same card the scf used, and check the
+        result with :func:`altharm.qe.reader.hubbard_is_active`.
+    hubbard_projectors : str
+        The projector flavour in the card's header. Must match the scf's.
+    extra_system : dict, optional
+        Further ``&SYSTEM`` entries verbatim, for whatever the scf set that
+        matters for the eigenvalues -- ``input_dft``, ``vdw_corr``,
+        ``lspinorb`` and so on. A key given here that is also set explicitly
+        above is refused rather than silently duplicated, because QE takes the
+        last occurrence and the result would not be the one asked for.
 
     Returns
     -------
@@ -165,7 +194,11 @@ def bands_input(
     if cell_ang.shape != (3, 3):
         raise ValueError(f"cell_ang must have shape (3, 3), got {cell_ang.shape}")
     species = list(species)
-    positions_ang = list(positions_ang)
+    if (positions_ang is None) == (positions_crystal is None):
+        raise ValueError(
+            "give exactly one of positions_ang or positions_crystal"
+        )
+    positions_ang = list(positions_ang) if positions_ang is not None else list(positions_crystal)
     ntyp = len(species)
     nat = len(positions_ang)
     if ntyp == 0:
@@ -214,6 +247,28 @@ def bands_input(
     # not even the right symmetry operation for what is being measured.
     # Setting both flags disables all of this and returns exactly the
     # k-points given, in the order given.
+    if occupations is not None:
+        lines.append(f"  occupations = '{occupations}'")
+    if smearing is not None:
+        lines.append(f"  smearing = '{smearing}'")
+    if degauss is not None:
+        lines.append(f"  degauss = {degauss:.8f}")
+    if extra_system:
+        written = {"ibrav", "celldm(1)", "nat", "ntyp", "ecutwfc", "ecutrho",
+                   "nbnd", "nspin", "nosym", "noinv", "occupations",
+                   "smearing", "degauss"}
+        for key, value in extra_system.items():
+            if key.strip().lower() in written:
+                raise ValueError(
+                    f"extra_system['{key}'] duplicates an entry this writer "
+                    f"already sets; QE would take the last one and the input "
+                    f"would not be the one asked for"
+                )
+            if isinstance(value, bool):
+                value = ".true." if value else ".false."
+            elif isinstance(value, str):
+                value = f"'{value}'"
+            lines.append(f"  {key} = {value}")
     lines.append("  nosym = .true.")
     lines.append("  noinv = .true.")
     lines.append("/")
@@ -235,9 +290,14 @@ def bands_input(
     for symbol, mass, pseudo in species:
         lines.append(f"  {symbol} {mass:.6f} {pseudo}")
 
-    lines.append("ATOMIC_POSITIONS angstrom")
-    for symbol, x, y, z in positions_ang:
-        lines.append(f"  {symbol} {x:.10f} {y:.10f} {z:.10f}")
+    if positions_crystal is not None:
+        lines.append("ATOMIC_POSITIONS crystal")
+        for symbol, x, y, z in positions_crystal:
+            lines.append(f"  {symbol} {x:.12f} {y:.12f} {z:.12f}")
+    else:
+        lines.append("ATOMIC_POSITIONS angstrom")
+        for symbol, x, y, z in positions_ang:
+            lines.append(f"  {symbol} {x:.10f} {y:.10f} {z:.10f}")
 
     # QE refuses "lattice parameter specified twice": with celldm(1) present,
     # CELL_PARAMETERS must be in alat units, not angstrom.  Real pw.x 7.2 stops
@@ -251,5 +311,11 @@ def bands_input(
         lines.append(f"  {row[0]:.12f} {row[1]:.12f} {row[2]:.12f}")
 
     lines.append(kpoints_card(kcart_tpiba, weights=weights).rstrip("\n"))
+
+    if hubbard:
+        lines.append("")
+        lines.append(f"HUBBARD ({hubbard_projectors})")
+        for manifold, u_ev in hubbard:
+            lines.append(f"  U {manifold} {float(u_ev):.6f}")
 
     return "\n".join(lines) + "\n"

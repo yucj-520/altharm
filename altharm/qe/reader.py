@@ -228,3 +228,74 @@ def spin_splitting(qebands: QEBands, band_index: int) -> np.ndarray:
             f"nbnd_dw={qebands.nbnd_dw} (only bands 0..{nbnd_common - 1} exist in both)"
         )
     return qebands.energies_ev[0, :, band_index] - qebands.energies_ev[1, :, band_index]
+
+
+def hubbard_is_active(xml_path):
+    """Whether the run that wrote this XML actually applied a Hubbard U.
+
+    Read the *output*, not the input. A ``bands`` or ``nscf`` run inherits the
+    charge density from its scf but **not** the Hubbard parameters: leave the
+    ``HUBBARD`` card out and QE runs plain PBE on a PBE+U density, silently --
+    no warning, no error, and a band structure that is simply the wrong one.
+    The only reliable check is to ask the finished calculation what it did.
+
+    Returns
+    -------
+    (bool, dict)
+        Whether any non-zero U was applied, and the U values found, keyed by
+        the label QE recorded them under (empty when none).
+    """
+    import xml.etree.ElementTree as ET
+
+    root = ET.parse(str(xml_path)).getroot()
+    found = {}
+    for node in root.iter():
+        tag = node.tag.split("}")[-1]
+        if tag not in ("Hubbard_U", "U"):
+            continue
+        label = (
+            node.attrib.get("label")
+            or node.attrib.get("specie")
+            or node.attrib.get("index")
+            or tag
+        )
+        try:
+            value = float((node.text or "").split()[0])
+        except (ValueError, IndexError):
+            continue
+        if abs(value) > 0.0:
+            found[str(label)] = value
+    return bool(found), found
+
+
+def require_hubbard(xml_path, expected=None, tol: float = 1e-6):
+    """Refuse a run that lost its Hubbard U, naming what was expected.
+
+    Parameters
+    ----------
+    expected : sequence of (label, U_eV), optional
+        If given, each U must be present with that value. The label is matched
+        on a suffix, since QE records it differently across versions
+        (``CrU-3d``, ``CrU``, an index).
+    """
+    active, found = hubbard_is_active(xml_path)
+    if not active:
+        raise ValueError(
+            f"{xml_path} was produced by a run with no Hubbard U applied.\n"
+            "If the scf used one, this run silently fell back to the plain "
+            "functional on a +U density -- pass the same HUBBARD card to "
+            "bands_input()."
+        )
+    if expected:
+        for label, u_ev in expected:
+            hit = [v for k, v in found.items() if k.endswith(str(label)) or str(label).endswith(k)]
+            if not hit:
+                raise ValueError(
+                    f"{xml_path}: expected a Hubbard U on '{label}', found only "
+                    f"{sorted(found)}"
+                )
+            if abs(hit[0] - float(u_ev)) > tol:
+                raise ValueError(
+                    f"{xml_path}: U on '{label}' is {hit[0]} eV, expected {u_ev} eV"
+                )
+    return found
