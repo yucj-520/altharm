@@ -60,13 +60,21 @@ organising idea — **fit every $l$ up to $l_\mathrm{max}$, not only the symmetr
 because the forbidden ones measure the calculation's own noise floor.** Read it before
 touching the fitting or symmetry code; nothing here restates it.
 
-**Status**, honestly: `altharm/units.py` and `altharm/basis.py` are written.
-`altharm/symmetry.py` — the numerical projector from a magnetic structure to its allowed $l$ —
-is written but has no committed test against a hand-derived case yet (`tests/` is empty). The
-least-squares projection step, the noise-floor bookkeeping, and the QE interface
-(`altharm/qe/` is an empty package right now) are in progress. The Wannier90 route, the
-defumat route, and any real material are not started. `PLAN.md`'s phase list (P0-P8) is the
-map of what's open and what each open thing is waiting on.
+**Status**, honestly: `altharm/units.py`, `basis.py`, `symmetry.py`, `kpath.py`,
+`project.py`, `noise.py`, `bandtrack.py`, `planewaves.py`, `wannier.py` and `qe/` (writer +
+reader) are written and tested (99 tests). The QE route has been run for real, twice: bcc iron
+(interface validation) and the group's Cr2SeAs PBE+U structure (production). On Cr2SeAs, P3's
+noise floor is measured at 0.106 μeV RMS over the forbidden harmonics — about five orders of
+magnitude below the ~9 meV the group measured re-converging self-consistently on a k-mesh —
+and P4 has a physical account of where the residual concentrates (the plane-wave count's own
+angular spectrum peaks at the same $l$ the noise floor does). A second, independent
+implementation exists too: `qe_native/harmwave.f90`, a new compiled QE executable (linked
+against `PW/src`/`PP/src`, using QE's own `find_sym()` and LAPACK directly, no XML, no
+spglib, no numpy) that agrees with the Python route to $10^{-9}$ eV on the same real data — see
+`qe_native/README.md`. The Wannier90 route is written and cross-validated against the group's
+real Cr2SeAs model. The defumat route is not started. `PLAN.md`'s phase list (P0-P9) is the
+map of what's open and what each open thing is waiting on — P5 (ecutwfc/k-density convergence)
+and P7 (defumat) are the largest gaps.
 
 ## Layout
 
@@ -78,12 +86,22 @@ map of what's open and what each open thing is waiting on.
 - `altharm/symmetry.py` — the numerical projector: which magnetic-space-group operations
   survive a given magnetic structure, tagged by whether they preserve or exchange the
   sublattices, and which angular harmonics that leaves allowed.
-- `altharm/qe/` — the Quantum ESPRESSO interface. Currently an empty package.
-- `examples/`, `tests/` — both currently empty.
+- `altharm/qe/` — the Quantum ESPRESSO interface: `writer.py` builds a `pw.x` input for a
+  `bands` run on an explicit k-circle, `reader.py` parses the resulting `data-file-schema.xml`.
+- `altharm/bandtrack.py` — following one band's identity around a k-path by continuity,
+  for the "band index vs. band identity" convention below.
+- `altharm/planewaves.py` — an independent plane-wave-count sphere counter, used to size the
+  basis-set-discontinuity noise source (P4) and to cross-check `qe.reader` indirectly.
+- `qe_native/` — `harmwave.f90`, a second, independent implementation of the harmonic fit and
+  the magnetic-symmetry classification, compiled directly into Quantum ESPRESSO as a new
+  `PP/src` executable rather than written in Python. See its own `README.md`.
+- `examples/` — worked scripts against real materials (currently Cr2SeAs).
+- `tests/data/` — committed real QE/Wannier output the tests check against; see the
+  independence rule above for why these are real runs, not synthetic fixtures, wherever a
+  synthetic one would not do.
 - `PLAN.md` — the record: one numbered phase per question, what settles it, and the measured
   number once there is one.
-- Not a git repository at the time of writing — do not assume `git` history exists when
-  reasoning about what changed when.
+- A git repository (`git log` is meaningful history, not an empty tree).
 
 ## Non-negotiable conventions
 
