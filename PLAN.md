@@ -220,8 +220,34 @@ Kohn-Sham Hamiltonian at fixed geometry. defumat does not implement D3, so this 
 the cross-check run without it rather than rebuilding every result under D2 — which would have
 made two independent D2 implementations part of the comparison.
 
-**What remains from the original plan:** the second independent check (re-run from a different
-converged density or SCF threshold) has still not been done. Whether the residual odd-forbidden
+**The second independent check, now done -- and it is a caveat, not a reassurance.**
+The same 152-point circle was re-run from a *different* converged density: a deliberately
+coarse 6x6x2 SCF mesh (14 irreducible k-points) against the production 12x12x4 (69). Both
+converged to 1e-10 Ry; both then frozen for an identical bands step.
+
+| $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| 12x12x4 (meV) | 59.171 | 38.817 | 3.162 | 8.421 | 1.486 | 2.838 | 0.986 | 1.147 |
+| 6x6x2 (meV) | 54.246 | 33.135 | 2.847 | 7.885 | 1.222 | 3.154 | 0.821 | 1.478 |
+| difference | -8.3% | -14.6% | -10.0% | -6.4% | -17.8% | +11.1% | -16.8% | **+28.9%** |
+
+The noise floor also moved, 27.49 -> 47.41 μeV. These are not two samples of one quantity:
+the coarse mesh is a genuinely different self-consistent state ($E_F$ 8.1169 -> 8.1379 eV,
+band 44 at +0.0242 eV instead of +0.0415 eV above it). The bands moved, so the harmonics moved.
+
+**This is now the largest known uncertainty in the pipeline, and the forbidden-harmonic floor
+does not see it.** The floor measures the *fit*; it says nothing about whether the density the
+fit was performed on is converged. At $l=3$ the density effect (4.9 meV) is over 100x both
+P5's per-coefficient cutoff spread (~20 μeV) and P3's own noise floor (27 μeV).
+
+**What this opens:** the production 12x12x4 mesh has never itself been shown converged. Going
+6 -> 12 changed the answer by up to 29%, so 12 -> 24 may too. Until that is run, every
+coefficient in P3/P6 carries an unquantified SCF-mesh uncertainty, and the <1% DFT-Wannier
+agreement of P6 should be read as "these two routes agree *on this density*", not as an
+absolute accuracy claim. Pinned in `tests/test_p3_scf_density.py`.
+
+**What remains from the original plan:** a 24x24x8 density, to bound the production mesh's own
+convergence. Whether the residual odd-forbidden
 floor (now 20-90 μeV, scaling down with k-count) extrapolates to zero as $k\to\infty$ or
 saturates at a genuine noise level is also not yet measured — it would take a third k-density
 to distinguish a $1/N_k$-type falloff from a plateau.
