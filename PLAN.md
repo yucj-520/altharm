@@ -121,34 +121,49 @@ together give *"lattice parameter specified twice"* from `cell_base_init`. Every
 synthetic test passed on that input. Fixed by writing the cell in `alat` units
 and keeping `celldm(1)`, since `celldm(1)` is what defines `tpiba`.
 
-**Measured, on the group's real Cr2SeAs run** (PBE+U, USPP, `conv_thr = 1e-10` scf,
-`diago_thr_init = 1e-13` frozen-density bands, 56-point circle at $k_z = 0.25\,b_3$, band nearest
-$E_F$):
+**Measured, twice -- the first measurement was on the wrong band, and the correction is
+itself part of the record.**
+
+The first pass used band index 22 (0-based) because that was the "band nearest $E_F$" index
+found earlier for the group's *Wannier* model, which has 38 bands. This DFT run has 80
+(16 semicore + 6 Se/As-4s + 38 p-d + 20 buffer, exactly matching the group's own comment in
+`nscf.in`), so band 22 there is a deep, nearly dispersionless semicore state 4.4 eV below
+$E_F$ -- not the band this project cares about, and its splitting is trivially near zero. That
+made the noise floor measured on it look spectacular (0.106 μeV) for the wrong reason: there
+was almost no signal to be noisy about. Caught only by checking the band's mean energy against
+$E_F$, which the first pass never did -- exactly the "band identity, not sorted position"
+convention `CLAUDE.md` already names, applied across two *different* band-counting schemes
+rather than across k-points on one path.
+
+**Measured correctly, on band 44** (0-based; $E - E_F = +0.0415$ eV, matching the Wannier
+route's own reported band to the same energy within 2 meV), same run, same 56-point circle at
+$k_z = 0.25\,b_3$:
 
 | | value |
 |---|---|
-| noise floor (RMS over forbidden $l$) | **0.106 μeV** |
-| worst single forbidden harmonic ($l=6$) | 0.331 μeV |
-| unfitted residual ($l > 12$) | 1.15 μeV |
-| $l=3$ (allowed) | 1.200 meV — **11314$\times$** the floor |
-| $l=9$ (allowed) | 0.253 meV — **2381$\times$** the floor |
+| $l=3$ (allowed) | 59.13 meV — agrees with the independent Wannier fit (59.48 meV) to 0.6% |
+| $l=9$ (allowed) | 38.86 meV — agrees with Wannier (39.06 meV) to 0.5% |
+| forbidden **even** $l$ (0,2,4,6,8,10,12) | all $<$ 1 μeV — as clean as the wrong-band measurement suggested |
+| forbidden **odd, non-multiple-of-3** $l$ (1,5,7,11) | **0.4 – 1.2 meV** — three orders of magnitude worse |
 
-Against the ≈9 meV the group measured re-converging self-consistently on a band/circle k-mesh
-(VASP `ICHARG=1`), the frozen-density route's floor is **smaller by close to five orders of
-magnitude**. This is the headline result of the phase: freezing the density (QE
-`calculation='bands'`, VASP's `ICHARG=11`) does not merely help, it removes that noise source
-almost entirely, at least on this band, this circle, this level of SCF/diagonalization
-tightness. The DFT route is feasible on the evidence gathered so far.
+The DFT-vs-Wannier agreement at $l=3,9$ is a real result this project did not have before, and
+a strong one: two routes sharing no code, on a genuine altermagnet, agreeing to under 1%. But
+the noise-floor picture the phase set out to measure is now openly unresolved rather than
+falsely closed: the forbidden harmonics are not uniformly small, and the ones that are large
+(0.4-1.2 meV) are not negligible against this same band's own higher allowed harmonics measured
+on the Wannier route ($l=15$: 3.2 meV, $l=21$: 8.5 meV) -- a real DFT measurement at those $l$
+would need a floor well under a meV to say anything Wannier does not already show.
 
-**What this number does not yet cover, and should before it is trusted as general:** a single
-band, a single circle, one $(l_\mathrm{max}, N_k)$ pairing, and thresholds tightened well past
-what a production run would use for throughput (`conv_thr = 1e-10`/`1e-12`, not QE's usual
-`1e-8`). The floor almost certainly rises as those are loosened; by how much is P5's question.
-The second independent check this phase's own plan called for — re-running the frozen-density
-step from a different converged density or a different SCF threshold and seeing whether the
-forbidden-$l$ amplitude moves — has not been done; right now the only cross-check is P9's
-QE-native tool agreeing with the Python route on the *same* eigenvalues, which validates the
-arithmetic, not the underlying noise itself.
+**Open question this leaves, sharper than before:** is the odd-non-3 floor genuine DFT
+noise, or an artefact of resolving up to $l_\mathrm{max}=12$ with only 56 k-points (a fit that
+uses 25 of 56 available points as coefficients is not generously over-determined)? P4 below
+rules out one candidate mechanism (the plane-wave count's own discontinuity, which is exactly
+even in $l$ and so cannot produce odd-$l$ noise). The next step is a denser circle -- enough
+k-points to push $l_\mathrm{max}$ past 21 with real degrees of freedom to spare, so the
+forbidden floor can be measured with the same rigor the allowed harmonics just were.
+
+**What remains from the original plan:** the second independent check (re-run from a different
+converged density or SCF threshold) has still not been done.
 
 ## P4 — Basis-set discontinuity sizing
 
@@ -173,18 +188,24 @@ peak-to-trough swing of 31 out of ~10800, about 0.3%. Its own angular harmonic s
 |---|---|---|---|---|---|---|
 | amplitude | 1.28 | 0.06 | **12.98** | 0.48 | 1.24 | 0.62 |
 
-(every odd $l$ is exactly zero, a symmetry of the sphere-counting itself, not a coincidence of
-this circle). The dominant harmonic is $l=6$, by an order of magnitude over its neighbours --
-**and $l=6$ is exactly where P3's noise floor peaks** (0.331 μeV, the single largest
-symmetry-forbidden harmonic measured there, against $<0.04$ μeV at every odd forbidden $l$).
-That is a real, physically dumb explanation for where that specific piece of noise comes from,
-not a coincidence to be waved at: the basis discretely losing and gaining plane waves six times
-around the circle is broadband-in-appearance but is not actually flat in $l$, and it lands
-squarely on the harmonic this material's own forbidden floor is tallest at.
+and **exactly zero at every odd $l$** -- a symmetry of the sphere-counting itself, not a
+coincidence of this circle.
 
-**Not yet done:** the thing this phase's own plan asked for — repeat at several `ecutwfc`
-values and confirm the $l=6$ noise peak's amplitude tracks the plane-wave swing's amplitude, not
-just coincides with it once.
+**This phase originally claimed the $l=6$ peak here explained P3's largest forbidden
+harmonic.** That was correct arithmetic on the wrong band (P3's band-22 mistake, see above):
+band 22's one substantial forbidden harmonic happened to sit at $l=6$, matching this spectrum's
+own peak, but it was a coincidence between two nearly meaningless numbers, not a causal link.
+On the corrected band 44, the real forbidden-harmonic problem is the *opposite* parity --
+$l=1,5,7,11$, all odd -- and the plane-wave discontinuity is exactly even in $l$ by
+construction. **It is therefore ruled out, not confirmed, as the source of P3's actual noise.**
+A mechanism checked and excluded is still a result; it narrows what P3's open question is
+asking about.
+
+**Not yet done:** find what *does* produce the odd-$l$ floor -- candidates include finite-$k$
+aliasing from a 56-point circle asked to resolve $l_\mathrm{max}=12$, or genuine SCF/diagonalization
+noise that happens to respect the even/odd split for a reason not yet identified -- and the
+original plan's own ask, repeating at several `ecutwfc` values to see whether the plane-wave
+swing's (even-$l$) amplitude tracks `ecutwfc` the way a discretisation effect should.
 
 ## P5 — Convergence in `ecutwfc` and k-density
 
@@ -238,10 +259,17 @@ once, the model loses its $k_z$ dependence, and a splitting that lives only at $
 collapses to zero. It looks exactly like truncation killing the harmonics. `truncate` therefore
 takes a `plane_normal`, and the circle's plane should always be passed to it.
 
-**Still open:** the QE↔Wannier agreement itself (needs P3), and the synthetic-`hr.dat` check
-that the damping really follows $J_l(k_0 R_\mathrm{max})$. A weaker form of the latter is in
-`tests/test_wannier.py`: a hand-built model carrying a known $l=6$ component loses over 98 % of
-it under a cut that leaves $l=2$ above half.
+**The QE↔Wannier agreement itself: measured.** On band 44 of the group's real Cr2SeAs run
+(P3), the DFT-fitted allowed harmonics agree with this Wannier model's own fit to under 1%:
+$l=3$ 59.13 vs 59.48 meV, $l=9$ 38.86 vs 39.06 meV. Two routes sharing no code -- a plane-wave
+calculation and a tight-binding fit to a different plane-wave calculation, read by two
+different parsers, projected by the same `altharm.project` but starting from entirely
+independent eigenvalue sources -- landing within 1% of each other on a real altermagnet is the
+strongest single result this project has produced so far.
+
+**Still open:** the synthetic-`hr.dat` check that the truncation damping really follows
+$J_l(k_0 R_\mathrm{max})$. A weaker form is in `tests/test_wannier.py`: a hand-built model
+carrying a known $l=6$ component loses over 98% of it under a cut that leaves $l=2$ above half.
 
 ## P7 — defumat cross-check
 

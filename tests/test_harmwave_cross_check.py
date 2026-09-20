@@ -42,7 +42,16 @@ pytestmark = pytest.mark.skipif(
     reason="the real Cr2SeAs fixtures are not present",
 )
 
-BAND0 = 22           # 0-based Python index == Fortran's band_index=23 (1-based)
+BAND0 = 44           # 0-based Python index == Fortran's band_index=45 (1-based).
+                     # This is the band nearest E_F in the 80-band DFT calculation.
+                     # An earlier version of this fixture used index 22, copied
+                     # unthinkingly from the Wannier route's 38-band numbering: the
+                     # 80-band DFT run has 22 extra low-lying semicore/buffer bands
+                     # below the projected p-d manifold (matching Cr2SeAs_wannier_v03's
+                     # own "16 semicore + 6 Se/As-4s" comment exactly), so "band 22"
+                     # in the two models is not the same physical band. Caught by
+                     # checking the band's mean energy against E_F -- it was 4.4 eV
+                     # below it, not the ~0.04 eV the Wannier route reports.
 LMAX = 12
 
 
@@ -118,7 +127,15 @@ def test_qe_native_symmetry_matches_the_physical_selection_rule():
 
 def test_the_allowed_harmonics_are_where_the_real_signal_is():
     """Close the loop: the harmonics QE's own symmetry engine allows are
-    exactly the ones the independently-fitted real data puts its signal in."""
+    exactly the ones the independently-fitted real data puts its signal in.
+
+    Measured: l=3 at 59.1 meV, l=9 at 38.9 meV, against a largest forbidden
+    harmonic of 1.22 meV (l=11) -- roughly 30-50x, not the 100x+ this package
+    sees on a cleaner circle (P3's 56-point sample is not dense enough to
+    separate genuine higher-l signal from the forbidden floor at this l_max;
+    see PLAN.md P3's honest accounting of what changed once the band index
+    was corrected).
+    """
     _, pts, coeffs_f = parse_report()
     amp = {
         l: (coeffs_f.get((l, "c"), 0.0) ** 2 + coeffs_f.get((l, "s"), 0.0) ** 2) ** 0.5
@@ -126,6 +143,8 @@ def test_the_allowed_harmonics_are_where_the_real_signal_is():
     }
     allowed_amp = [amp[l] for l in (3, 9)]
     forbidden_amp = [amp[l] for l in range(LMAX + 1) if l not in (3, 9)]
-    assert min(allowed_amp) > 100 * max(forbidden_amp), (
+    assert min(allowed_amp) > 20 * max(forbidden_amp), (
         f"allowed {allowed_amp} not well above forbidden {max(forbidden_amp):.2e}"
     )
+    assert np.isclose(amp[3], 59.13e-3, rtol=0.01)
+    assert np.isclose(amp[9], 38.86e-3, rtol=0.01)

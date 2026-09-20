@@ -193,15 +193,33 @@ def test_high_harmonics_need_long_in_plane_hoppings(model):
 # ------------------------------------------------------ P3: the noise floor
 
 def test_p3_noise_floor_on_the_real_frozen_density_run():
-    """The headline number of the whole project, pinned down.
+    """The headline number of the whole project -- corrected once already.
 
-    Measured on the group's real Cr2SeAs PBE+U run (conv_thr=1e-10 scf,
-    diago_thr_init=1e-13 frozen-density bands, 56-point circle at
-    k_z = 0.25 b3): a noise floor of 0.106 ueV RMS over the symmetry-forbidden
-    harmonics, against a group-measured ~9 meV from re-converging
-    self-consistently on a band/circle k-mesh (VASP ICHARG=1) -- close to
-    five orders of magnitude lower. This is the number that answers "is the
-    DFT route feasible at all", and it must not silently drift.
+    **This test replaces an earlier version that measured band index 22.**
+    That was wrong: it is the band nearest E_F in the group's Wannier model,
+    which has 38 bands, but this DFT run has 80 (16 semicore + 6 Se/As-4s +
+    38 p-d + 20 buffer, per the group's own nscf.in comment), so band 22
+    there is a deep, nearly flat semicore state 4.4 eV below E_F -- not the
+    band the project cares about, and its splitting is trivially near zero,
+    which is why the noise floor measured on it looked spectacular (0.106
+    ueV). Caught by checking the band's mean energy against E_F, which the
+    first version never did.
+
+    Measured correctly, on band 44 (E - E_F = +0.04 eV, matching the
+    Wannier route's own reported band to the same energy): the allowed
+    harmonics agree with the independent Wannier-route fit to under 1%
+    (l=3: 59.13 vs 59.48 meV; l=9: 38.86 vs 39.06 meV) -- a genuine,
+    parameter-free cross-check between DFT and Wannier this project did not
+    have before. But the "noise floor" picture is now much less clean: with
+    only 56 k-points, the forbidden harmonics are NOT uniformly tiny. Every
+    forbidden **even** l is at the ~0.1-1 ueV level (as clean as the
+    wrong-band measurement suggested), but every forbidden **odd,
+    non-multiple-of-three** l (1, 5, 7, 11) sits at 0.4-1.2 meV -- three
+    orders of magnitude worse, and not negligible next to the smaller real
+    signals this band carries at higher l (l=15 is 3.2 meV, l=21 is 8.5 meV,
+    both confirmed against the same Wannier route). Whether that asymmetry
+    is genuine DFT noise or an artefact of only having 56 points to resolve
+    up to l=12 is P3's next open question, not yet answered.
     """
     from altharm.qe.reader import read_bands
     from altharm.symmetry import SpinOp, allowed_l
@@ -219,7 +237,10 @@ def test_p3_noise_floor_on_the_real_frozen_density_run():
                                rot_cart=np.array([float(x) for x in p[2:11]]).reshape(3, 3)))
 
     qb = read_bands(xml)
-    band0 = 22
+    band0 = 44
+    assert abs((qb.energies_ev[0, :, band0].mean() - qb.fermi_ev) - 0.0415) < 0.001, (
+        "band 44 should be the one at E - E_F = +0.04 eV; check nothing upstream moved"
+    )
     dE = qb.energies_ev[0, :, band0] - qb.energies_ev[1, :, band0]
     theta = np.arctan2(qb.kpoints_tpiba[:, 1], qb.kpoints_tpiba[:, 0])
     dirs = np.stack([np.cos(theta), np.sin(theta), 0.093 * np.ones_like(theta)], axis=1)
@@ -228,25 +249,39 @@ def test_p3_noise_floor_on_the_real_frozen_density_run():
     allowed = allowed_l(basis, ops, dirs)
     rep = noise_report(project(basis, dirs, dE), allowed)
 
-    assert rep.floor < 0.2e-6, f"noise floor drifted: {rep.floor / 1e-6:.3f} ueV (was 0.106)"
-    assert rep.floor_max < 0.5e-6, f"worst forbidden harmonic drifted: {rep.floor_max / 1e-6:.3f} ueV"
-    assert rep.snr()[3] > 5000, f"l=3 SNR dropped: {rep.snr()[3]:.0f} (was ~11314)"
-    assert rep.snr()[9] > 1000, f"l=9 SNR dropped: {rep.snr()[9]:.0f} (was ~2381)"
-    # against the group's VASP ICHARG=1 self-consistent-on-circle noise (~9 meV = 9000 ueV)
-    assert rep.floor < 9000e-6 / 1e4, "frozen density should beat the self-consistent floor by 1e4x"
+    assert set(rep.allowed) == {3, 9}
+    assert np.isclose(rep.allowed[3], 59.13e-3, rtol=0.01)
+    assert np.isclose(rep.allowed[9], 38.86e-3, rtol=0.01)
+    # the even forbidden harmonics: clean, ~ueV level
+    even_forbidden = [rep.forbidden[l] for l in (2, 4, 6, 8, 10, 12)]
+    assert max(even_forbidden) < 5e-6, f"even forbidden harmonics drifted: {even_forbidden}"
+    # the odd, non-multiple-of-3 forbidden harmonics: not clean, ~meV level
+    odd_forbidden = [rep.forbidden[l] for l in (1, 5, 7, 11)]
+    assert 0.3e-3 < max(odd_forbidden) < 2e-3, (
+        f"odd-non-3 forbidden harmonics moved outside their measured range: {odd_forbidden}"
+    )
 
 
 # ---------------------------------------------- P4: basis-set discontinuity
 
-def test_p4_planewave_discontinuity_peaks_at_l6_matching_the_noise_peak():
-    """The physical explanation for P3's l=6 noise peak, pinned down.
+def test_p4_planewave_discontinuity_is_even_in_l_and_peaks_at_l6():
+    """What the basis-set discontinuity can, and provably cannot, explain.
 
-    Measured: the plane-wave count around the real 56-point circle
-    (ecutwfc=60 Ry) has its dominant angular harmonic at l=6 (~13, an order
-    of magnitude over its neighbours), every odd l exactly zero, and l=6 is
-    exactly where P3's noise floor peaks (0.331 ueV, its single largest
-    forbidden harmonic). This does not prove causation by itself, but it is
-    the kind of coincidence that should not silently stop coinciding.
+    **This test previously claimed the l=6 peak here explained P3's noise
+    peak.** That claim was built on P3's since-corrected band (see
+    test_p3_noise_floor_on_the_real_frozen_density_run's docstring): the
+    wrong band's one substantial forbidden harmonic happened to sit at l=6,
+    matching this spectrum's own l=6 peak by coincidence, not causation.
+
+    On the corrected band, the real problem is the opposite parity: every
+    forbidden EVEN l is clean (~ueV) and every forbidden ODD,
+    non-multiple-of-three l (1, 5, 7, 11) sits at 0.4-1.2 meV. The
+    measurement below -- the plane-wave count's own harmonic content is
+    EXACTLY zero at every odd l -- therefore *rules out* the basis-set
+    discontinuity as the explanation for that odd-l noise, rather than
+    supplying one. That is still worth recording: a candidate mechanism
+    checked and excluded is as much a result as one confirmed. What
+    actually causes the odd-l noise is P3's open question.
     """
     from altharm.qe.reader import read_bands
     from altharm.planewaves import count_planewaves, discontinuity_spectrum

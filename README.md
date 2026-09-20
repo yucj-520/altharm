@@ -155,15 +155,17 @@ installs them. The `dev` extra adds `pytest`, and `plot` adds matplotlib.
 
 ## Status
 
-The harmonic machinery is written and tested; the DFT route is written but has
-not yet been run on a real altermagnet. 64 tests pass.
+The harmonic machinery, the QE route, the Wannier route, and a second independent
+implementation compiled directly into Quantum ESPRESSO are all written and tested.
+99 tests pass.
 
 | | |
 |---|---|
-| **Written and tested** | `units.py`; `basis.py` (circular and real-spherical bases); `kpath.py` (circles and sphere quadrature, built in Cartesian axes); `symmetry.py` (the numerical projector, plus the `symprec` guard below); `project.py` (least squares, amplitude and phase per $l$); `noise.py` (the forbidden-$l$ floor); `wannier.py` (`hr.dat`, $H(k)$, and the truncation study); `qe/` (input writer and XML eigenvalue reader) |
-| **Validated against real data** | the Wannier route, on the group's Cr2SeAs v03 model — see below |
-| **Validated against real `pw.x` output** | the QE route: a bcc-iron LSDA run made with `bands_input` and read back with `read_bands` agrees with the eigenvalues QE printed to 5e-5 eV, which is the text output's own rounding. The run is committed under `tests/data/qe_fe_bands/` |
-| **Not started** | the QE route on a real altermagnet (the noise-floor question); the defumat route; the 3D spherical-harmonic path beyond its unit tests |
+| **Written and tested** | `units.py`; `basis.py`; `kpath.py`; `symmetry.py` (the numerical projector, plus the `symprec` guard below); `project.py`; `noise.py`; `bandtrack.py` (band identity by continuity); `planewaves.py` (an independent plane-wave-count sphere counter); `wannier.py`; `qe/` (writer + reader) |
+| **Validated against real data** | the Wannier route, on the group's Cr2SeAs v03 model; the QE route, on the group's real Cr2SeAs PBE+U production run — see below |
+| **Validated against real `pw.x` output** | bcc iron (interface validation, `tests/data/qe_fe_bands/`) and the group's Cr2SeAs run (production, `tests/data/qe_cr2seas_p3/`) |
+| **A second, independent implementation** | `qe_native/harmwave.f90` — a new executable compiled directly into Quantum ESPRESSO (linked against its own `PW/src`/`PP/src`, using its own `find_sym()` and LAPACK, no XML, no spglib, no numpy) that agrees with the Python route to $10^{-9}$ eV on the same real data. See `qe_native/README.md` |
+| **Not started** | the defumat route; the 3D spherical-harmonic path beyond its unit tests; a proper noise-floor measurement (see below — the current one is inconclusive, not negative) |
 
 ### What has been measured
 
@@ -187,6 +189,39 @@ $\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
   $l=21$ falls by a factor of six while $l=3$ moves by a third. The falloff is
   not monotonic, which is what the Bessel picture above predicts and what a
   simple exponential-damping story would miss.
+
+On the group's **real Cr2SeAs PBE+U DFT run** (USPP, Grimme-D3, a 56-point circle
+at the same $k_z$), on the band nearest $E_F$ ($E-E_F = +0.04$ eV):
+
+- **DFT reproduces the Wannier fit to under 1%**, from an entirely independent
+  eigenvalue source: $l=3$ at 59.13 meV (Wannier: 59.48), $l=9$ at 38.86 meV
+  (Wannier: 39.06). This is the strongest single cross-check in the project so
+  far, and it very nearly wasn't measured correctly — see the trap below.
+- The noise-floor question this route exists to answer is **not yet resolved,
+  and is more interesting than a clean number would have been**: every
+  forbidden *even* $l$ is clean (sub-μeV), but every forbidden *odd,
+  non-multiple-of-three* $l$ (1, 5, 7, 11) sits at 0.4–1.2 meV — not negligible
+  against this band's own smaller allowed harmonics at higher $l$ (15, 21,
+  measured on the Wannier route at 3.2 and 8.5 meV). The basis-set
+  discontinuity from `ecutwfc` is *ruled out* as the cause, precisely because
+  it is exactly even in $l$ by construction (measured: its own harmonic
+  spectrum peaks at $l=6$, an order of magnitude over its other even
+  harmonics, and vanishes exactly at every odd $l$) — a mechanism excluded is
+  still a finding. What actually produces the odd-$l$ floor, and whether a
+  denser circle would resolve it, is open; see `PLAN.md` P3/P4.
+
+**A trap this measurement caught in itself.** The first attempt used band
+index 22 — copied from the Wannier model's own "band nearest $E_F$" index,
+without checking that the two models number their bands the same way. They
+don't: this DFT run has 80 bands (16 semicore + 6 Se/As-4s + 38 p-d + 20
+buffer) against the Wannier model's 38, so band 22 in the DFT run is a
+dispersionless semicore state 4.4 eV below $E_F$, not the band this project
+cares about — and its near-zero splitting made the noise floor measured on it
+look spectacular (0.106 μeV) for a completely uninteresting reason. Caught
+only by checking the band's mean energy against $E_F$, which is exactly the
+"a band is identified by its character, not its sorted position" convention
+this project already had for following one band across k-points, applied
+here across two *different* models' band-counting schemes instead.
 
 ### What running real QE changed
 

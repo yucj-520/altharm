@@ -60,11 +60,21 @@ operation set first, filtering for the circle's plane second (see the
 ## Status
 
 Validated once, on the group's real Cr2SeAs run (PBE+U, USPP, 56-point
-circle at k_z = 0.25 b3): eigenvalues agree with the Python XML route to
-1e-9 eV, the fitted coefficients agree to 1e-9 eV coefficient-by-coefficient,
-and the operation list — fed into `altharm.symmetry` — reproduces the
-{3, 9} selection rule exactly where the real signal is. See
+circle at k_z = 0.25 b3, band 44 -- the one nearest E_F, at E-E_F = +0.04 eV):
+eigenvalues agree with the Python XML route to 1e-9 eV, the fitted
+coefficients agree to 1e-9 eV coefficient-by-coefficient, and the operation
+list — fed into `altharm.symmetry` — reproduces the {3, 9} selection rule
+exactly where the real signal is (l=3: 59.13 meV, l=9: 38.86 meV, agreeing
+with the group's independent Wannier fit to under 1%). See
 `tests/test_harmwave_cross_check.py` and `tests/data/harmwave_cr2seas/`.
+
+A first run of this validation used band index 22 by mistake -- copied from
+the Wannier route's 38-band numbering, where 22 *is* the band nearest E_F,
+but this DFT run has 80 bands (22 more, matching the group's own "16
+semicore + 6 Se/As-4s" comment in `nscf.in`), so band 22 here is a
+dispersionless semicore state 4.4 eV below E_F. Caught by checking the
+band's mean energy against E_F, which is worth doing on every new
+`band_index` rather than assumed from a different model's numbering.
 
 **Scope of this v1, honestly:** collinear LSDA only (no SOC, no
 noncollinear); the circle must lie in the k_x k_y plane at a fixed k_z
@@ -108,7 +118,10 @@ material to build against.
   prefix      = 'AB'          ! same prefix as the bands.in that produced it
   outdir      = '../tmp'      ! points at prefix.save
   lmax        = 12
-  band_index  = 23             ! 1-based; Python's 0-based index + 1
+  band_index  = 45             ! 1-based; Python's 0-based index + 1.
+                                ! Check the band's mean energy against E_F --
+                                ! do not carry an index over from a different
+                                ! model's band count (see Status above).
   magmom(1)   = 1.0            ! one entry per ATOMIC_SPECIES, same order/signs
   magmom(2)   = -1.0           ! as the bands.in that produced the run
   magmom(3)   = 0.0

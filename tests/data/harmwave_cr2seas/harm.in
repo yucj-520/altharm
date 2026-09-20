@@ -2,7 +2,7 @@
   prefix = 'AB'
   outdir = '../tmp'
   lmax = 12
-  band_index = 23
+  band_index = 45
   magmom(1) = 1.0
   magmom(2) = -1.0
   magmom(3) = 0.0
