@@ -16,3 +16,12 @@ Grimme-D3, converged scf (`conv_thr = 1e-10`) followed by a `bands` run on a
   QE writes one `Hubbard_U` element per **species**, both labelled `"3d"`
   (`specie="CrU"` and `specie="CrD"`), which a label-only key collapses onto
   each other.
+
+## Update: harmwave.x rerun on the 152-point circle (2026-09-20)
+
+The original harmwave.x cross-check (harmwave_report.txt) used the earlier
+56-point circle. `harmwave_report_152.txt` (in tests/data/harmwave_cr2seas/)
+reruns the same tool on the group's best data -- the 152-point circle, band
+44, lmax=45 -- so the Fortran and Python routes are now cross-checked on the
+final dataset rather than an earlier one. Coefficient agreement: 5.1e-15 eV
+max deviation across all 46 coefficients, machine precision.
