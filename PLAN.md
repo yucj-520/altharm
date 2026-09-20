@@ -237,9 +237,14 @@ originally measured remains real (it is a genuine, `ecutwfc`-dependent, exactly-
 effect) but is now understood to be a minor contributor next to plain undersampling for this
 circle's noise budget.
 
-**Not yet done:** the original plan's own ask, repeating at several `ecutwfc` values (at fixed,
-adequate k-density) to size the plane-wave-count mechanism's own contribution on its own, now
-that it is no longer confounded with undersampling.
+**Done, and the answer is that it contributes nothing measurable (P5).** Repeating at three
+`ecutwfc` values at fixed, adequate k-density — chosen so the *predicted* discontinuity spans
+80$\times$ (1167.5 / 14.5 / 975.2 ppm at 60 / 66 / 80 Ry) — produced noise floors of
+27.5 / 27.0 / 28.7 μeV, a 6% range, with the cutoff predicted to be cleanest measuring
+marginally *dirtier* than the production one. The plane-wave count's angular structure is real
+and `ecutwfc`-dependent, but it does not reach the eigenvalues at this level. **The mechanism is
+therefore ruled out for the whole floor, not merely its odd-$l$ part** — this phase's
+contribution to the noise budget is, as far as this measurement can tell, zero.
 
 ## P5 — Convergence in `ecutwfc` and k-density
 
