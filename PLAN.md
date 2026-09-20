@@ -446,7 +446,39 @@ with $k$). For QE's 69 irreducible k-points that is ~8.4 minutes an iteration, ~
 35 iterations QE needed — feasible overnight. The band step on the 152-point circle turned out
 to be the larger cost and is being timed separately.
 
-**Still open:** the run itself, and the derivative-based check on top of it.
+**Measured, and P7 is closed for the harmonic comparison.** defumat ran the full pipeline on
+the real Cr2SeAs cell: SCF to convergence (45 iterations, 43.8 min) then the 152-point circle
+(135.3 min). Compared against a QE run whose input file is **byte-identical** (6x6x2 SCF mesh,
+no vdW) -- which matters more here than it normally would, since P3's second check showed the
+SCF mesh alone moves these coefficients by 6-29%, so comparing defumat-on-6x6x2 against
+QE-on-12x12x4 would have hidden a code difference inside a density difference.
+
+| $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| QE 6x6x2 (meV) | 54.2458 | 33.1347 | 2.8469 | 7.8846 | 1.2220 | 3.1537 | 0.8207 | 1.4780 |
+| defumat (meV) | 54.2676 | 33.1525 | 2.8439 | 7.8879 | 1.2222 | 3.1536 | 0.8218 | 1.4774 |
+| deviation | +0.04% | +0.05% | -0.10% | +0.04% | +0.02% | -0.00% | +0.12% | -0.04% |
+
+**Worst case 0.12%, median 0.04%**, across amplitudes spanning two orders of magnitude. The
+SCF free energies agree to all six digits defumat prints (-912.52758604 vs -912.527586 Ry,
+0.001 meV), and band 44 sits 0.01 meV from where QE puts it, so this is the same band and not
+a lucky index.
+
+**The two codes also report the same noise floor: 47.41 vs 47.43 μeV.** That is the more
+interesting half. A floor reproduced to 0.04% by an implementation sharing no linear algebra,
+no FFT, no ultrasoft augmentation and no Hubbard code is a property of the *k-sampling and the
+physics*, not an artefact of either code -- which is exactly what P3's aliasing diagnosis
+predicted and what no single-code measurement could establish.
+
+**The three routes, all on Cr2SeAs band 44:** QE (Fortran plane-wave), Wannier90 (tight-binding
+interpolation of a *different* plane-wave run) and defumat (Python plane-wave) agree at every
+one of the eight allowed harmonics. QE-vs-defumat is ~10x tighter than QE-vs-Wannier (0.04% vs
+0.5%), as it should be: the first pair solve the same equations, the second pair includes an
+interpolation. Pinned in `tests/test_p7_defumat.py`.
+
+**Still open:** the derivative-based check (a Taylor expansion in $\mathbf k$ against the
+Fourier coefficients from the sampled circle), and the 12x12x4 production-mesh defumat run
+(job 20361811) which would put the three-route comparison on the production density.
 
 ## P8 — Production on the group's materials
 
