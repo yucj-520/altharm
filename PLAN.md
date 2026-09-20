@@ -83,10 +83,15 @@ to the accuracy least-squares theory predicts for that noise level. The check is
 independent if the same code that generates the synthetic data isn't reused to do the fit, or
 vice versa.
 
-**Measured:** not yet. Blocked on the projection step itself, which doesn't exist yet —
-`altharm/basis.py` has the design matrix and `altharm/symmetry.py` has the projector, but
-nothing currently turns a design matrix and a set of $(\text{direction}, \Delta E)$ pairs into
-fitted coefficients.
+**Measured: closed.** `altharm/project.py` exists and `tests/test_project.py` does exactly
+what this phase asked for: $\Delta E(\theta)$ built from $a_2=-0.4$, $b_2=1.3$, $b_6=0.75$
+chosen by hand, fitted with $l_\mathrm{max}=8$, and every coefficient recovered to
+$10^{-12}$ with no spurious weight anywhere else. The amplitude is also checked to be
+invariant under rotating the angular origin (a physical quantity must not depend on where
+$\theta$ is measured from), the least-squares route is checked against an independent
+quadrature sum on a sphere, and the weighted fit against normal equations solved separately
+in the test. Underdetermined and mismatched-length inputs are refused by name rather than
+returning garbage.
 
 ## P3 — QE noise floor on a real altermagnet (the big feasibility question)
 
@@ -185,6 +190,35 @@ magnitude better, on the physically relevant band, with the signal it is being c
 independently confirmed rather than assumed. The residual beyond $l=45$ (0.80 meV) is not part
 of the floor — it is real unresolved structure, consistent with the Wannier route needing
 $l$ up to ~48 to fully converge this band.
+
+**Confirmed at 304 points, and the floor is now 1 μeV.** The prediction that follows from
+the aliasing diagnosis was tested directly: a 304-point circle (Nyquist $l=152$), bands-only on
+the same converged density, gives
+
+| | 152 points | 304 points |
+|---|---|---|
+| noise floor | 27.49 μeV | **1.01 μeV** |
+| worst forbidden harmonic | 86.26 μeV | **2.81 μeV** |
+| $l=3$ / $l=45$ | 59.1712 / 1.1468 meV | 59.1714 / 1.1466 meV |
+
+A factor of **27 for twice the k-points**, with every allowed harmonic moving by less than
+0.2 μeV — the control that makes it aliasing rather than anything else. The falloff is steeper
+than a naive expectation because what aliases in is the signal's own high-$l$ tail: moving
+Nyquist from 76 to 152 replaces content from $l\sim30$–76 with content from $l>152$, where the
+spectrum is far smaller.
+
+**The practical statement this phase ends on:** the floor is not an intrinsic limit of the DFT
+calculation. Basis size, cutoff, diagonalisation threshold and density convergence have each
+been measured to do nothing for it; k-point count sets it, and buys it down steeply and
+cheaply — the 304-point bands step was about fifteen minutes on 16 cores, reusing the density.
+The weakest allowed harmonic ($l=39$, 0.99 meV) goes from ~36$\times$ the floor to
+~1000$\times$, which is the headroom needed to go after $l>45$.
+
+**A side result that unblocked P7.** Removing `vdw_corr = 'grimme-d3'` leaves every eigenvalue
+**bit-identical**: Grimme's correction depends only on nuclear positions and never enters the
+Kohn-Sham Hamiltonian at fixed geometry. defumat does not implement D3, so this is what lets
+the cross-check run without it rather than rebuilding every result under D2 — which would have
+made two independent D2 implementations part of the comparison.
 
 **What remains from the original plan:** the second independent check (re-run from a different
 converged density or SCF threshold) has still not been done. Whether the residual odd-forbidden
