@@ -1,0 +1,67 @@
+&CONTROL
+  calculation = 'scf'
+  prefix      = 'AB'
+  outdir      = './tmp'
+  pseudo_dir = '/scratch/work/yuc11/pseudopotentials'
+! verbosity   = 'high'
+! tprnfor     = .true.
+! tstress     = .true.
+/
+
+&SYSTEM
+  ibrav       = 0
+  nat         = 10
+  ntyp        = 4
+  input_dft   = 'PBE'
+  ecutwfc     = 60
+  ecutrho     = 240
+
+  nspin       = 2
+  starting_magnetization(1) =  1.00   ! CrU, from VASP MAGMOM +4
+  starting_magnetization(2) = -1.00   ! CrD, from VASP MAGMOM -4
+  starting_magnetization(3) =  0.00   ! Se
+  starting_magnetization(4) =  0.00   ! As
+
+  occupations = 'smearing'
+  smearing    = 'gaussian'
+  degauss     = 0.0037
+
+/
+
+&ELECTRONS
+  conv_thr         = 1.0d-10
+  electron_maxstep = 200
+  mixing_beta      = 0.10
+  diagonalization  = 'david'
+/
+
+ATOMIC_SPECIES
+  CrU   51.9961   cr_pbe_v1.5.uspp.F.UPF
+  CrD   51.9961   cr_pbe_v1.5.uspp.F.UPF
+  Se    78.9710   Se_pbe_v1.uspp.F.UPF
+  As    74.9216   As.pbe-n-rrkjus_psl.0.2.UPF
+
+CELL_PARAMETERS angstrom
+        3.7258396285        0.0000002055        0.0000000080
+       -1.8629196361        3.2266718606       -0.0000000204
+        0.0000000476       -0.0000000907       16.9179784926
+
+ATOMIC_POSITIONS crystal
+  CrU      0.3333333331      0.6666666714      0.5896431867
+  CrD      0.3333333340      0.6666666619      0.4103569463
+  CrD      0.6666666651      0.3333333405      0.0896259946
+  CrU      0.6666666703      0.3333333398      0.9103736386
+  Se       0.0000000000      0.0000000000      0.3332384847
+  Se       0.0000000000      0.0000000000      0.6667617671
+  Se       0.3333333245      0.6666666877      0.8334101415
+  Se       0.3333333154      0.6666666914      0.1665899648
+  As       0.6666666980      0.3333332982      0.5000002984
+  As       0.0000000000      0.0000000000      0.0000000000
+
+K_POINTS automatic
+  24 24 8  0 0 0
+
+HUBBARD (ortho-atomic)
+  U CrU-3d 3.0
+  U CrD-3d 3.0
+

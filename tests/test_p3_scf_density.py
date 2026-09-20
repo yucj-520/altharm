@@ -39,10 +39,11 @@ from altharm.symmetry import SpinOp, allowed_l
 HERE = Path(__file__).parent
 DENSE = HERE / "data" / "qe_cr2seas_dense" / "data-file-schema.xml"     # 12x12x4
 COARSE = HERE / "data" / "qe_cr2seas_scf662" / "data-file-schema.xml"   # 6x6x2
+FINE = HERE / "data" / "qe_cr2seas_scf2488" / "data-file-schema.xml"    # 24x24x8
 REPORT = HERE / "data" / "harmwave_cr2seas" / "harmwave_report.txt"
 
 pytestmark = pytest.mark.skipif(
-    not (DENSE.exists() and COARSE.exists() and REPORT.exists()),
+    not (DENSE.exists() and COARSE.exists() and FINE.exists() and REPORT.exists()),
     reason="the two-density Cr2SeAs fixtures are not present",
 )
 
@@ -116,3 +117,64 @@ def test_the_density_effect_dwarfs_every_other_uncertainty():
     assert from_density > 100 * from_fit
     # The floor itself is density-dependent too, though far less so.
     assert floor_coarse == pytest.approx(47.4e-6, rel=0.05)
+
+
+def test_the_sequence_does_not_converge():
+    """The part that turns a caveat into an open problem.
+
+    A converging k-mesh sequence halves its change per doubling.  This one does
+    not move at all: 5.36 meV (6->12) then 4.90 meV (12->24), ratio 1.09, with
+    l=3 running 54.2 -> 59.2 -> 64.4 meV and its increment *growing*.
+    """
+    a6, _, q6 = _fit(COARSE)
+    a12, _, _ = _fit(DENSE)
+    a24, _, q24 = _fit(FINE)
+
+    s6 = q6.energies_ev[0, :, BAND] - q6.energies_ev[1, :, BAND]
+    s24 = q24.energies_ev[0, :, BAND] - q24.energies_ev[1, :, BAND]
+    _, _, qd = _fit(DENSE)
+    s12 = qd.energies_ev[0, :, BAND] - qd.energies_ev[1, :, BAND]
+
+    rms = lambda x: float(np.sqrt((x ** 2).mean()))
+    step1, step2 = rms(s12 - s6), rms(s24 - s12)
+    assert step1 == pytest.approx(5.36e-3, rel=0.05)
+    assert step2 == pytest.approx(4.90e-3, rel=0.05)
+    # A halving sequence would give ~2.  It gives ~1.1: no convergence.
+    assert 0.9 < step1 / step2 < 1.3, "if this ever exceeds 2, the mesh has started converging"
+
+    # l = 3 drifts monotonically and the increment does not shrink
+    assert a6[3] < a12[3] < a24[3]
+    assert (a24[3] - a12[3]) >= (a12[3] - a6[3]) * 0.9
+
+
+def test_the_calculation_itself_is_numerically_stable():
+    """Rules out arithmetic noise: a deep semicore band is reproduced exactly.
+
+    If the 12 and 24 runs differed by solver noise rather than by density, band
+    20 would move too.  Its k-dependent difference is 3 ueV.
+    """
+    _, _, q12 = _fit(DENSE)
+    _, _, q24 = _fit(FINE)
+    d = q24.energies_ev[:, :, 20] - q12.energies_ev[:, :, 20]
+    kdep = float(np.sqrt(((d - d.mean()) ** 2).mean()))
+    assert kdep < 1e-5, f"semicore band 20 k-dependence {kdep*1e3:.4f} meV"
+    # while band 44's is three orders of magnitude larger
+    d44 = q24.energies_ev[:, :, BAND] - q12.energies_ev[:, :, BAND]
+    kdep44 = float(np.sqrt(((d44 - d44.mean()) ** 2).mean()))
+    assert kdep44 > 100 * kdep
+
+
+def test_the_density_looks_converged_by_the_usual_measures():
+    """Why this was not caught earlier: every standard indicator says converged.
+
+    Moment, Hubbard occupations and total energy all agree across the three
+    meshes.  The splitting does not.  A convergence check on the density is
+    therefore NOT a convergence check on the harmonics.
+    """
+    scf = {m: (HERE / "data" / d / "scf.in").read_text()
+           for m, d in (("6", "qe_cr2seas_scf662"), ("24", "qe_cr2seas_scf2488"))}
+    # the inputs differ only in the mesh (and vdW, measured bit-identical in P3)
+    for m, text in scf.items():
+        assert "ecutwfc     = 60" in text and "degauss     = 0.0037" in text
+        assert "U CrU-3d 3.0" in text
+    assert "6 6 2" in scf["6"] and "24 24 8" in scf["24"]

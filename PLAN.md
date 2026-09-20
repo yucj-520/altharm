@@ -246,8 +246,45 @@ coefficient in P3/P6 carries an unquantified SCF-mesh uncertainty, and the <1% D
 agreement of P6 should be read as "these two routes agree *on this density*", not as an
 absolute accuracy claim. Pinned in `tests/test_p3_scf_density.py`.
 
-**What remains from the original plan:** a 24x24x8 density, to bound the production mesh's own
-convergence. Whether the residual odd-forbidden
+**The 24x24x8 density, and the answer is worse than the question.** The production mesh was
+not merely unverified -- the coefficients do not converge at all over the range tested.
+
+| $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| 6x6x2 (14 k) | 54.246 | 33.135 | 2.847 | 7.885 | 1.222 | 3.154 | 0.821 | 1.478 |
+| 12x12x4 (69 k) | 59.171 | 38.817 | 3.162 | 8.421 | 1.486 | 2.838 | 0.986 | 1.147 |
+| 24x24x8 (449 k) | 64.364 | 43.356 | 3.566 | 8.681 | 1.880 | 2.607 | 1.196 | 1.002 |
+
+$l=3$ runs 54.2 -> 59.2 -> 64.4 meV, monotone, with the increment *growing* (+4.93, +5.19).
+On $\Delta E(\theta)$ itself the change is 5.36 meV (6->12) then 4.90 meV (12->24): a ratio of
+**1.09**, where a converging sequence would halve. Summed over the eight allowed harmonics,
+12.54 meV then 11.37 meV. **There is no convergence in this range.**
+
+**What has been excluded.** The band is the same one throughout (band 44 sits at +0.0242 /
++0.0415 / +0.0372 eV above $E_F$; the 43/44 gap is 11.6 / 18.0 / 19.3 meV and never closes, so
+no reordering). The inputs differ only in the k-mesh and in `vdw_corr`, which was separately
+measured to leave eigenvalues bit-identical. The calculation is numerically stable: deep
+semicore band 20's k-dependent difference between the 12 and 24 runs is **0.003 meV**. And the
+density is converged by every usual measure -- absolute magnetization 15.95 $\mu_B$ in all
+three, Hubbard occupations agreeing to $10^{-3}$ (4.49067 / 4.49213 / 4.49170), total energies
+within 3.7 meV.
+
+So a density that looks converged by moment and energy still moves the valence eigenvalues by
+1.5-2.9 meV in their k-dependent part, and that is 4-10% of the splitting and 9-27% of an
+individual weak harmonic.
+
+**Leading hypothesis, under test.** Bands 43 and 44 straddle $E_F$ (-0.13 and +0.04 eV) while
+the Gaussian smearing is only 0.0037 Ry = 50 meV, so their occupations are acutely sensitive to
+how the Fermi surface is sampled. If that is the mechanism, repeating 12x12x4 and 24x24x8 at
+`degauss = 0.015` Ry should bring the two much closer together. Jobs 20363874 / 20363875.
+
+**What this does and does not undermine.** It does *not* touch the code-to-code results: QE,
+Wannier and defumat are each compared at fixed density, and P7's 0.12% agreement and the
+identical 47.4 μeV floor stand. It does *not* touch the noise floor, which measures the fit.
+What it undermines is any claim about the **absolute value** of a coefficient: until this is
+resolved, every number in P3/P6/P7 should be read as "on this density", and the weak harmonics
+($l \geq 27$, 1-2 meV) carry an SCF-mesh uncertainty of order 20%, not 27 μeV. Pinned in
+`tests/test_p3_scf_density.py`. Whether the residual odd-forbidden
 floor (now 20-90 μeV, scaling down with k-count) extrapolates to zero as $k\to\infty$ or
 saturates at a genuine noise level is also not yet measured — it would take a third k-density
 to distinguish a $1/N_k$-type falloff from a plateau.
