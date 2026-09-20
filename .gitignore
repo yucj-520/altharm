@@ -12,3 +12,5 @@ tmp/
 out/
 runs/
 quantum_espresso/
+.coverage
+htmlcov/

@@ -98,3 +98,60 @@ def test_condition_number_flags_bad_sampling():
     pts = np.stack([np.cos(t), np.sin(t), np.zeros_like(t)], axis=1)
     fit = project(CircularBasis(8), pts, np.cos(6 * t))
     assert fit.cond > 1e3, f"cond = {fit.cond:.3g}, expected an obviously bad number"
+
+
+def test_phase_by_l_recovers_a_phase_chosen_by_hand():
+    """`phase_by_l` had no test at all until now -- a whole public method.
+
+    Build cos(l*(theta - phi0)) for a phase phi0 picked by hand; the reported
+    phase must come back as phi0, independent of l. (The method divides the
+    fitted atan2 by l precisely so the answer is an angle on the circle, not
+    an angle in l-space.)
+    """
+    n, phi0 = 96, 0.21
+    pts = circle(1.0, n)
+    t = CircularBasis(1).angles(pts)
+    values = 1.3 * np.cos(4 * (t - phi0)) + 0.8 * np.cos(6 * (t - phi0))
+
+    fit = project(CircularBasis(8), pts, values)
+    phases = fit.phase_by_l()
+    assert np.isclose(phases[4], phi0, atol=1e-9), f"l=4 phase {phases[4]}"
+    assert np.isclose(phases[6], phi0, atol=1e-9), f"l=6 phase {phases[6]}"
+    assert 0 not in phases, "l=0 has no phase and must be omitted"
+
+
+def test_phase_by_l_returns_empty_for_a_spherical_basis():
+    """Spherical labels are (l, m), not (l, 'c'|'s'), so there is no circular
+    phase to report -- the method must say so by returning {} rather than
+    inventing one."""
+    pts, _ = sphere_grid(6, 10)
+    fit = project(SphericalBasis(3), pts, np.ones(len(pts)))
+    assert fit.phase_by_l() == {}
+
+
+def test_weighted_least_squares_moves_the_fit_toward_the_weighted_points():
+    """The `weights` branch of project() was never exercised.
+
+    Reference computed independently in the test: with weights w, the weighted
+    normal equations are (D^T W D) c = D^T W y for W = diag(w). Solve that by
+    hand with numpy and require project() to agree.
+    """
+    n = 40
+    pts = circle(1.0, n)
+    t = CircularBasis(1).angles(pts)
+    rng = np.random.default_rng(4)
+    values = 0.7 * np.cos(2 * t) + 0.3 * rng.normal(size=n)
+    weights = np.linspace(0.1, 3.0, n)
+
+    basis = CircularBasis(4)
+    got = project(basis, pts, values, weights=weights).coeffs
+
+    D = basis.evaluate(pts)
+    W = np.diag(weights)
+    expected = np.linalg.solve(D.T @ W @ D, D.T @ W @ values)
+    assert np.allclose(got, expected, atol=1e-10), f"max dev {np.abs(got-expected).max():.2e}"
+
+    unweighted = project(basis, pts, values).coeffs
+    assert not np.allclose(got, unweighted, atol=1e-6), (
+        "weighted and unweighted fits came out identical -- the weights did nothing"
+    )

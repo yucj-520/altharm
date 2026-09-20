@@ -114,3 +114,58 @@ def test_require_hubbard_refuses_and_says_why():
         require_hubbard(FE_XML)
     with pytest.raises(ValueError, match="silently fell back"):
         require_hubbard(FE_XML)
+
+
+# ---------------------------------------------- the positive path, on real data
+
+CR2SEAS_XML = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
+
+
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+def test_a_real_pbe_u_run_reports_its_u_in_eV_not_hartree():
+    """The regression the bug fix never had.
+
+    QE's XML stores Hubbard_U in **Hartree**: a card asking for 3.0 eV comes
+    back as 1.102479665269648e-01. Reading that number without converting
+    reports a U about 27 times too small and fails every comparison against
+    the eV value the input asked for. Until now this conversion was only ever
+    checked by a throwaway script -- the committed tests exercised the
+    no-Hubbard case alone, so reverting the fix would have gone unnoticed.
+    """
+    active, found = hubbard_is_active(CR2SEAS_XML)
+    assert active is True
+    for key in ("CrU-3d", "CrD-3d"):
+        assert key in found, f"expected {key} in {sorted(found)}"
+        assert found[key] == pytest.approx(3.0, abs=1e-6), (
+            f"{key} = {found[key]} eV -- if this is ~0.11, the Hartree->eV "
+            "conversion was lost"
+        )
+
+
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+def test_per_species_entries_do_not_collapse_onto_one_key():
+    """The second half of the same bug.
+
+    QE writes one Hubbard_U element per species, and both carry label="3d"
+    (specie="CrU" and specie="CrD"). Keying on `label` alone silently drops one
+    of them; it went unnoticed on this run only because the two U values happen
+    to be equal, so the collision was invisible in the numbers.
+    """
+    _, found = hubbard_is_active(CR2SEAS_XML)
+    assert len(found) == 2, f"expected one entry per species, got {sorted(found)}"
+    assert set(found) == {"CrU-3d", "CrD-3d"}
+
+
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+def test_require_hubbard_accepts_the_matching_expectation():
+    found = require_hubbard(CR2SEAS_XML, expected=[("CrU-3d", 3.0), ("CrD-3d", 3.0)])
+    assert set(found) == {"CrU-3d", "CrD-3d"}
+
+
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+def test_require_hubbard_refuses_a_wrong_value_and_a_missing_manifold():
+    """Both `expected=` failure branches, which nothing exercised before."""
+    with pytest.raises(ValueError, match="expected 4.0 eV"):
+        require_hubbard(CR2SEAS_XML, expected=[("CrU-3d", 4.0)])
+    with pytest.raises(ValueError, match="expected a Hubbard U on 'Fe-3d'"):
+        require_hubbard(CR2SEAS_XML, expected=[("Fe-3d", 3.0)])
