@@ -252,7 +252,40 @@ still not be converged.
 confirm the allowed-$l$ coefficients stop moving while the forbidden-$l$ floor from P3 does not
 grow back in.
 
-**Measured:** not yet.
+**Measured, the k-density half:** already answered by P3's 56$\to$152-point comparison. The
+allowed harmonics did not move (each still within 1% of the Wannier route) while the forbidden
+floor dropped an order of magnitude, which is the required behaviour: converged signal, shrinking
+noise.
+
+**Measured, the `ecutwfc` half — the cheap part first, and it changed what the expensive part
+should be.** `count_planewaves` reproduces QE's own plane-wave count exactly (P4), so the size
+of the basis-set discontinuity at any candidate cutoff can be measured *without running DFT at
+all*. Scanning 50-100 Ry in 2 Ry steps on the real Cr2SeAs circle, reporting the $l=6$ amplitude
+of the plane-wave count per million plane waves:
+
+| ecutwfc (Ry) | 54 | 60 | 66 | 72 | 80 | 96 | 100 |
+|---|---|---|---|---|---|---|---|
+| $l=6$ (ppm) | 255 | **1168** | **14.5** | 48 | 975 | 571 | 29 |
+
+**It does not converge smoothly, and it is not monotone.** Neighbouring cutoffs differ by more
+than an order of magnitude, because which reciprocal-lattice points happen to land in a thin
+shell at the cutoff radius is an arithmetic property of that particular radius, not a quantity
+that anneals as the basis grows. Raising `ecutwfc` is therefore the *wrong instinct* for this
+noise source: 80 Ry is 67$\times$ dirtier than 66 Ry while costing 33% more plane waves.
+
+**And the production cutoff is the worst one in the range.** 60 Ry — what the group's setup
+uses — measures 1168 ppm, the maximum anywhere in 50-100 Ry; 66 Ry measures 14.5 ppm for 15%
+more plane waves. That turns P5 from a convergence scan into a **falsifiable prediction**: if
+the plane-wave discontinuity is what sets the even-$l$ floor, a 66 Ry run should show that floor
+drop by up to ~80$\times$ while the allowed harmonics stay put. If it does not, the mechanism is
+not what sets that floor, and P4's "ruled out for odd $l$" should be extended to even $l$ too.
+
+The scan is pinned in `tests/test_p5_cutoff_selection.py`, including the $N_{pw} \propto
+E_{cut}^{1.5}$ sphere-volume law as a sanity check on the counter itself (exponent recovered to
+within 0.02).
+
+**Running:** scf + 152-point bands at 66 Ry and at 80 Ry, to test that prediction against real
+eigenvalues.
 
 ## P6 — Wannier cross-check and the truncation study
 
