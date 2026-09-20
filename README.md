@@ -190,25 +190,26 @@ $\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
   not monotonic, which is what the Bessel picture above predicts and what a
   simple exponential-damping story would miss.
 
-On the group's **real Cr2SeAs PBE+U DFT run** (USPP, Grimme-D3, a 56-point circle
-at the same $k_z$), on the band nearest $E_F$ ($E-E_F = +0.04$ eV):
+On the group's **real Cr2SeAs PBE+U DFT run** (USPP, Grimme-D3, the same $k_z$),
+on the band nearest $E_F$ ($E-E_F = +0.04$ eV), first on a 56-point circle and then, to
+settle what that left open, on a 152-point one reusing the same converged density:
 
-- **DFT reproduces the Wannier fit to under 1%**, from an entirely independent
-  eigenvalue source: $l=3$ at 59.13 meV (Wannier: 59.48), $l=9$ at 38.86 meV
-  (Wannier: 39.06). This is the strongest single cross-check in the project so
-  far, and it very nearly wasn't measured correctly — see the trap below.
-- The noise-floor question this route exists to answer is **not yet resolved,
-  and is more interesting than a clean number would have been**: every
-  forbidden *even* $l$ is clean (sub-μeV), but every forbidden *odd,
-  non-multiple-of-three* $l$ (1, 5, 7, 11) sits at 0.4–1.2 meV — not negligible
-  against this band's own smaller allowed harmonics at higher $l$ (15, 21,
-  measured on the Wannier route at 3.2 and 8.5 meV). The basis-set
-  discontinuity from `ecutwfc` is *ruled out* as the cause, precisely because
-  it is exactly even in $l$ by construction (measured: its own harmonic
-  spectrum peaks at $l=6$, an order of magnitude over its other even
-  harmonics, and vanishes exactly at every odd $l$) — a mechanism excluded is
-  still a finding. What actually produces the odd-$l$ floor, and whether a
-  denser circle would resolve it, is open; see `PLAN.md` P3/P4.
+- **DFT reproduces the Wannier fit to under 1% at all eight allowed harmonics**,
+  $l=3$ through $l=45$, from an entirely independent eigenvalue source — not
+  just the leading pair. This is the strongest cross-check in the project.
+- **The noise floor, measured properly once there were enough k-points to
+  trust it:** 27.5 μeV RMS over the forbidden harmonics, worst single one
+  86 μeV — over two orders of magnitude below the group's ~9 meV
+  self-consistent-on-mesh floor. The 56-point circle's odd-forbidden
+  harmonics (0.4–1.2 meV, worryingly close to this band's own weaker allowed
+  signal) dropped by roughly an order of magnitude when the k-count tripled,
+  while the allowed harmonics and the already-clean even-forbidden ones did
+  not move — the signature of finite-$k$ aliasing shrinking with more points,
+  not of a fixed noise floor. The basis-set discontinuity from `ecutwfc`
+  remains *ruled out* as the cause of that floor (it is exactly even in $l$
+  by construction) but is now understood as a minor contributor next to
+  plain undersampling. See `PLAN.md` P3/P4/P6 for the numbers at every
+  intermediate step.
 
 **A trap this measurement caught in itself.** The first attempt used band
 index 22 — copied from the Wannier model's own "band nearest $E_F$" index,

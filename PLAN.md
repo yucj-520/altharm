@@ -162,8 +162,35 @@ even in $l$ and so cannot produce odd-$l$ noise). The next step is a denser circ
 k-points to push $l_\mathrm{max}$ past 21 with real degrees of freedom to spare, so the
 forbidden floor can be measured with the same rigor the allowed harmonics just were.
 
+**Resolved with a denser circle.** The 56-point circle's odd-non-multiple-of-3 floor
+(0.4-1.2 meV) was suspected to be a finite-$k$ artefact rather than fixed DFT noise; a
+152-point circle at the same $k_z$, reusing the already-converged density (no scf rerun),
+confirms it. At $l_\mathrm{max}=45$:
+
+| | 56 points | 152 points |
+|---|---|---|
+| noise floor (RMS, forbidden $l$) | 0.53 meV | **27.5 μeV** |
+| worst forbidden harmonic | 1.22 meV ($l=11$) | 86.3 μeV ($l=41$) |
+| weakest allowed/floor ratio | ~30$\times$ | **36$\times$** |
+| even forbidden $l$ | already clean | still clean, unchanged |
+
+Tripling the k-count dropped the odd-forbidden floor by roughly an order of magnitude while
+the allowed harmonics did not move (still agreeing with Wannier to under 1%, at *every* one of
+$l=3,9,15,21,27,33,39,45$, not only the leading two) and the even-forbidden floor stayed exactly
+as clean as before. That is the signature of finite-$k$ aliasing shrinking with more points, not
+of a fixed numerical noise floor that would not care how many k-points were used. **P3's
+headline number, properly measured this time:** noise floor 27.5 μeV RMS, worst single
+harmonic 86 μeV, against the group's ~9 meV self-consistent-on-mesh floor — over two orders of
+magnitude better, on the physically relevant band, with the signal it is being compared against
+independently confirmed rather than assumed. The residual beyond $l=45$ (0.80 meV) is not part
+of the floor — it is real unresolved structure, consistent with the Wannier route needing
+$l$ up to ~48 to fully converge this band.
+
 **What remains from the original plan:** the second independent check (re-run from a different
-converged density or SCF threshold) has still not been done.
+converged density or SCF threshold) has still not been done. Whether the residual odd-forbidden
+floor (now 20-90 μeV, scaling down with k-count) extrapolates to zero as $k\to\infty$ or
+saturates at a genuine noise level is also not yet measured — it would take a third k-density
+to distinguish a $1/N_k$-type falloff from a plateau.
 
 ## P4 — Basis-set discontinuity sizing
 
@@ -201,11 +228,18 @@ construction. **It is therefore ruled out, not confirmed, as the source of P3's 
 A mechanism checked and excluded is still a result; it narrows what P3's open question is
 asking about.
 
-**Not yet done:** find what *does* produce the odd-$l$ floor -- candidates include finite-$k$
-aliasing from a 56-point circle asked to resolve $l_\mathrm{max}=12$, or genuine SCF/diagonalization
-noise that happens to respect the even/odd split for a reason not yet identified -- and the
-original plan's own ask, repeating at several `ecutwfc` values to see whether the plane-wave
-swing's (even-$l$) amplitude tracks `ecutwfc` the way a discretisation effect should.
+**Found: mostly finite-$k$ aliasing, not `ecutwfc`.** Tripling the circle's point count
+(56$\to$152, same `ecutwfc`, same converged density, P3) dropped the odd-forbidden floor by
+roughly an order of magnitude while the even-forbidden floor and every allowed harmonic stayed
+put. A discretisation effect tied to `ecutwfc` would not respond to k-count alone; a
+finite-sampling aliasing effect would, and did. The plane-wave-count mechanism this phase
+originally measured remains real (it is a genuine, `ecutwfc`-dependent, exactly-even-in-$l$
+effect) but is now understood to be a minor contributor next to plain undersampling for this
+circle's noise budget.
+
+**Not yet done:** the original plan's own ask, repeating at several `ecutwfc` values (at fixed,
+adequate k-density) to size the plane-wave-count mechanism's own contribution on its own, now
+that it is no longer confounded with undersampling.
 
 ## P5 — Convergence in `ecutwfc` and k-density
 
@@ -259,13 +293,16 @@ once, the model loses its $k_z$ dependence, and a splitting that lives only at $
 collapses to zero. It looks exactly like truncation killing the harmonics. `truncate` therefore
 takes a `plane_normal`, and the circle's plane should always be passed to it.
 
-**The QE↔Wannier agreement itself: measured.** On band 44 of the group's real Cr2SeAs run
-(P3), the DFT-fitted allowed harmonics agree with this Wannier model's own fit to under 1%:
-$l=3$ 59.13 vs 59.48 meV, $l=9$ 38.86 vs 39.06 meV. Two routes sharing no code -- a plane-wave
-calculation and a tight-binding fit to a different plane-wave calculation, read by two
-different parsers, projected by the same `altharm.project` but starting from entirely
-independent eigenvalue sources -- landing within 1% of each other on a real altermagnet is the
-strongest single result this project has produced so far.
+**The QE↔Wannier agreement itself: measured, and now exhaustive.** On band 44 of the
+group's real Cr2SeAs run, a 152-point circle (P3) puts the DFT-fitted allowed harmonics within
+1% of this Wannier model's own fit at **every one of the eight allowed harmonics from $l=3$ to
+$l=45$**: 59.17/59.48 ($l=3$), 38.82/39.06 ($l=9$), 3.16/3.18 ($l=15$), 8.42/8.44 ($l=21$),
+1.49/1.49 ($l=27$), 2.84/2.84 ($l=33$), 0.99/1.00 ($l=39$), 1.15/1.14 meV ($l=45$; DFT/Wannier).
+Two routes sharing no code -- a plane-wave calculation and a tight-binding fit to a different
+plane-wave calculation, read by two different parsers, projected by the same `altharm.project`
+but starting from entirely independent eigenvalue sources -- agreeing to under 1% across eight
+harmonics spanning nearly two orders of magnitude in amplitude is the strongest result this
+project has produced.
 
 **Still open:** the synthetic-`hr.dat` check that the truncation damping really follows
 $J_l(k_0 R_\mathrm{max})$. A weaker form is in `tests/test_wannier.py`: a hand-built model
