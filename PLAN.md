@@ -394,7 +394,33 @@ SCF/NSCF, Wannier90's tight-binding interpolation, defumat's JAX plane-wave impl
 converging on the same $a_l$ is the strongest evidence available in this project. The
 derivative-based check above is a second, internal-to-defumat cross-check on top of that.
 
-**Measured:** not yet. The defumat route is not started.
+**Measured:** not yet, but the route is no longer blocked — four obstacles were found and
+cleared, and each is worth recording because none was visible from the README.
+
+1. **JAX was already here.** Not in the main environment, but in `pyqula_env` (0.6.2, CPU
+   device working, `jax.grad` verified). Only `equinox` was missing; installed.
+2. **The pseudopotentials are UPF v1, defumat reads only v2.** Its error message names the
+   fix, and the converter is one we already built: `q-e/upflib/upfconv.x -u`. Cr and Se
+   converted; As was already v2. Converted copies live in
+   `altharm_runs/defumat_p7/pseudo_v2/`.
+3. **defumat does not implement Grimme-D3**, which the group's production input uses (it has
+   D2 only). Rather than rebuild everything under D2 — which would have made two independent
+   D2 implementations part of the comparison — this was settled by measurement: a QE bands run
+   with `vdw_corr` removed gives **bit-identical eigenvalues**. Grimme's correction depends
+   only on nuclear positions and never enters the Kohn-Sham Hamiltonian at fixed geometry, so
+   the cross-check can simply omit it. Recorded in P3 and `tests/test_p3_k304.py`.
+4. **`/tmp` is node-local on this cluster.** The defumat source sat in a scratchpad under
+   `/tmp`; every probe on the login node worked and every SLURM job failed with
+   `ModuleNotFoundError`. Anything a batch job touches has to live on `/scratch` or `$HOME`.
+
+**Cost, measured rather than guessed.** On the real Cr2SeAs cell, defumat's SCF costs
+$37.8\,\mathrm{s} + 6.8\,\mathrm{s} \times N_k$ per iteration (fit to 1, 2 and 4 k-points;
+the 80% fixed part is density, FFT, ultrasoft augmentation and Hubbard, none of which scales
+with $k$). For QE's 69 irreducible k-points that is ~8.4 minutes an iteration, ~5 hours for the
+35 iterations QE needed — feasible overnight. The band step on the 152-point circle turned out
+to be the larger cost and is being timed separately.
+
+**Still open:** the run itself, and the derivative-based check on top of it.
 
 ## P8 — Production on the group's materials
 
