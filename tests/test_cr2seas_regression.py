@@ -9,6 +9,8 @@ These numbers are the record.  If one moves, either the physics changed or
 something broke, and either way it must be explained rather than re-baselined.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -186,3 +188,88 @@ def test_high_harmonics_need_long_in_plane_hoppings(model):
         assert abs(long_[l] - full[l]) < 0.01 * full[l], (
             f"l={l} not converged at 15 A: {long_[l] / 1e-3:.3f} vs {full[l] / 1e-3:.3f} meV"
         )
+
+
+# ------------------------------------------------------ P3: the noise floor
+
+def test_p3_noise_floor_on_the_real_frozen_density_run():
+    """The headline number of the whole project, pinned down.
+
+    Measured on the group's real Cr2SeAs PBE+U run (conv_thr=1e-10 scf,
+    diago_thr_init=1e-13 frozen-density bands, 56-point circle at
+    k_z = 0.25 b3): a noise floor of 0.106 ueV RMS over the symmetry-forbidden
+    harmonics, against a group-measured ~9 meV from re-converging
+    self-consistently on a band/circle k-mesh (VASP ICHARG=1) -- close to
+    five orders of magnitude lower. This is the number that answers "is the
+    DFT route feasible at all", and it must not silently drift.
+    """
+    from altharm.qe.reader import read_bands
+    from altharm.symmetry import SpinOp, allowed_l
+
+    report = Path(__file__).parent / "data" / "harmwave_cr2seas" / "harmwave_report.txt"
+    xml = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
+    if not report.exists() or not xml.exists():
+        pytest.skip("real Cr2SeAs fixtures not present")
+
+    ops = []
+    for line in report.read_text().splitlines():
+        if line.startswith("OP"):
+            p = line.split()
+            ops.append(SpinOp(rot_frac=None, trans=None, chi=int(p[1]),
+                               rot_cart=np.array([float(x) for x in p[2:11]]).reshape(3, 3)))
+
+    qb = read_bands(xml)
+    band0 = 22
+    dE = qb.energies_ev[0, :, band0] - qb.energies_ev[1, :, band0]
+    theta = np.arctan2(qb.kpoints_tpiba[:, 1], qb.kpoints_tpiba[:, 0])
+    dirs = np.stack([np.cos(theta), np.sin(theta), 0.093 * np.ones_like(theta)], axis=1)
+
+    basis = CircularBasis(12)
+    allowed = allowed_l(basis, ops, dirs)
+    rep = noise_report(project(basis, dirs, dE), allowed)
+
+    assert rep.floor < 0.2e-6, f"noise floor drifted: {rep.floor / 1e-6:.3f} ueV (was 0.106)"
+    assert rep.floor_max < 0.5e-6, f"worst forbidden harmonic drifted: {rep.floor_max / 1e-6:.3f} ueV"
+    assert rep.snr()[3] > 5000, f"l=3 SNR dropped: {rep.snr()[3]:.0f} (was ~11314)"
+    assert rep.snr()[9] > 1000, f"l=9 SNR dropped: {rep.snr()[9]:.0f} (was ~2381)"
+    # against the group's VASP ICHARG=1 self-consistent-on-circle noise (~9 meV = 9000 ueV)
+    assert rep.floor < 9000e-6 / 1e4, "frozen density should beat the self-consistent floor by 1e4x"
+
+
+# ---------------------------------------------- P4: basis-set discontinuity
+
+def test_p4_planewave_discontinuity_peaks_at_l6_matching_the_noise_peak():
+    """The physical explanation for P3's l=6 noise peak, pinned down.
+
+    Measured: the plane-wave count around the real 56-point circle
+    (ecutwfc=60 Ry) has its dominant angular harmonic at l=6 (~13, an order
+    of magnitude over its neighbours), every odd l exactly zero, and l=6 is
+    exactly where P3's noise floor peaks (0.331 ueV, its single largest
+    forbidden harmonic). This does not prove causation by itself, but it is
+    the kind of coincidence that should not silently stop coinciding.
+    """
+    from altharm.qe.reader import read_bands
+    from altharm.planewaves import count_planewaves, discontinuity_spectrum
+    from altharm.units import BOHR_ANG
+
+    xml = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
+    if not xml.exists():
+        pytest.skip("real Cr2SeAs fixtures not present")
+
+    qb = read_bands(xml)
+    k_invang = qb.kpoints_tpiba * (2 * np.pi / (qb.alat_bohr * BOHR_ANG))
+    npw = count_planewaves(k_invang, qb.cell_ang, ecutwfc_ry=60.0)
+
+    assert npw.min() == 10770 and npw.max() == 10801
+
+    theta = np.arctan2(k_invang[:, 1], k_invang[:, 0])
+    basis = CircularBasis(12)
+    dirs = np.stack([np.cos(theta), np.sin(theta), np.zeros_like(theta)], axis=1)
+    amp = discontinuity_spectrum(basis, dirs, npw).amplitude_by_l()
+
+    for l in (1, 3, 5, 7, 9, 11):
+        assert amp[l] < 1e-8, f"odd l={l} should vanish exactly, got {amp[l]:.2e}"
+    even_others = [amp[l] for l in (2, 4, 8, 10, 12)]
+    assert amp[6] > 10 * max(even_others), (
+        f"l=6 ({amp[6]:.2f}) should dominate the other even harmonics {even_others}"
+    )

@@ -121,8 +121,34 @@ together give *"lattice parameter specified twice"* from `cell_base_init`. Every
 synthetic test passed on that input. Fixed by writing the cell in `alat` units
 and keeping `celldm(1)`, since `celldm(1)` is what defines `tpiba`.
 
-**Still open, and it is the whole feasibility question:** the noise floor itself,
-on a real altermagnet, with the forbidden harmonics measuring it.
+**Measured, on the group's real Cr2SeAs run** (PBE+U, USPP, `conv_thr = 1e-10` scf,
+`diago_thr_init = 1e-13` frozen-density bands, 56-point circle at $k_z = 0.25\,b_3$, band nearest
+$E_F$):
+
+| | value |
+|---|---|
+| noise floor (RMS over forbidden $l$) | **0.106 μeV** |
+| worst single forbidden harmonic ($l=6$) | 0.331 μeV |
+| unfitted residual ($l > 12$) | 1.15 μeV |
+| $l=3$ (allowed) | 1.200 meV — **11314$\times$** the floor |
+| $l=9$ (allowed) | 0.253 meV — **2381$\times$** the floor |
+
+Against the ≈9 meV the group measured re-converging self-consistently on a band/circle k-mesh
+(VASP `ICHARG=1`), the frozen-density route's floor is **smaller by close to five orders of
+magnitude**. This is the headline result of the phase: freezing the density (QE
+`calculation='bands'`, VASP's `ICHARG=11`) does not merely help, it removes that noise source
+almost entirely, at least on this band, this circle, this level of SCF/diagonalization
+tightness. The DFT route is feasible on the evidence gathered so far.
+
+**What this number does not yet cover, and should before it is trusted as general:** a single
+band, a single circle, one $(l_\mathrm{max}, N_k)$ pairing, and thresholds tightened well past
+what a production run would use for throughput (`conv_thr = 1e-10`/`1e-12`, not QE's usual
+`1e-8`). The floor almost certainly rises as those are loosened; by how much is P5's question.
+The second independent check this phase's own plan called for — re-running the frozen-density
+step from a different converged density or a different SCF threshold and seeing whether the
+forbidden-$l$ amplitude moves — has not been done; right now the only cross-check is P9's
+QE-native tool agreeing with the Python route on the *same* eigenvalues, which validates the
+arithmetic, not the underlying noise itself.
 
 ## P4 — Basis-set discontinuity sizing
 
@@ -138,7 +164,27 @@ different circle radii at one `ecutwfc`) and see whether the resulting artefact 
 moves the way a plane-wave-counting argument predicts — a genuinely physical high-$l$ signal
 would not move with `ecutwfc` at all.
 
-**Measured:** not yet.
+**Measured, on the group's real Cr2SeAs circle** (56 k-points, $k_z = 0.25\,b_3$,
+`ecutwfc = 60` Ry): the plane-wave count steps between 10770 and 10801 around the circle -- a
+peak-to-trough swing of 31 out of ~10800, about 0.3%. Its own angular harmonic spectrum
+(`altharm.planewaves.discontinuity_spectrum`), fit on the exact same basis as the splitting:
+
+| $l$ | 2 | 4 | 6 | 8 | 10 | 12 |
+|---|---|---|---|---|---|---|
+| amplitude | 1.28 | 0.06 | **12.98** | 0.48 | 1.24 | 0.62 |
+
+(every odd $l$ is exactly zero, a symmetry of the sphere-counting itself, not a coincidence of
+this circle). The dominant harmonic is $l=6$, by an order of magnitude over its neighbours --
+**and $l=6$ is exactly where P3's noise floor peaks** (0.331 μeV, the single largest
+symmetry-forbidden harmonic measured there, against $<0.04$ μeV at every odd forbidden $l$).
+That is a real, physically dumb explanation for where that specific piece of noise comes from,
+not a coincidence to be waved at: the basis discretely losing and gaining plane waves six times
+around the circle is broadband-in-appearance but is not actually flat in $l$, and it lands
+squarely on the harmonic this material's own forbidden floor is tallest at.
+
+**Not yet done:** the thing this phase's own plan asked for — repeat at several `ecutwfc`
+values and confirm the $l=6$ noise peak's amplitude tracks the plane-wave swing's amplitude, not
+just coincides with it once.
 
 ## P5 — Convergence in `ecutwfc` and k-density
 
