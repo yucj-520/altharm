@@ -273,10 +273,37 @@ So a density that looks converged by moment and energy still moves the valence e
 1.5-2.9 meV in their k-dependent part, and that is 4-10% of the splitting and 9-27% of an
 individual weak harmonic.
 
-**Leading hypothesis, under test.** Bands 43 and 44 straddle $E_F$ (-0.13 and +0.04 eV) while
-the Gaussian smearing is only 0.0037 Ry = 50 meV, so their occupations are acutely sensitive to
-how the Fermi surface is sampled. If that is the mechanism, repeating 12x12x4 and 24x24x8 at
-`degauss = 0.015` Ry should bring the two much closer together. Jobs 20363874 / 20363875.
+**Resolved: it was Fermi-surface sampling, and the fix works.** Bands 43 and 44 straddle $E_F$
+(-0.13 and +0.04 eV) while the production Gaussian smearing is only 0.0037 Ry = 50 meV, so
+their occupations track how finely the Fermi surface is sampled. Repeating both meshes at
+`degauss = 0.015` Ry:
+
+| | change in $\Delta E(\theta)$, 12 -> 24 | worst harmonic |
+|---|---|---|
+| degauss 0.0037 (production) | 4.903 meV | 26.5% |
+| degauss 0.0150 | **0.541 meV** | **2.2%** |
+
+A factor of **9** on the splitting and **12** on the worst coefficient. Two independent knobs
+then land on the same answer, which is what makes it the converged one:
+
+| degauss / mesh | 0.0037 / 12x12x4 | 0.0150 / 12x12x4 | 0.0037 / 24x24x8 | 0.0150 / 24x24x8 |
+|---|---|---|---|---|
+| $l=3$ (meV) | **59.17** | 63.75 | 64.36 | 64.29 |
+| $l=9$ (meV) | **38.82** | 42.92 | 43.36 | 43.45 |
+
+The two 24x24x8 runs differ 4x in smearing yet agree to 0.1-1.7%, so the smearing's own bias is
+negligible there: **the converged $l=3$ is 64.3 meV**. The noise floor is unaffected throughout
+(27.5 / 24.3 / 25.1 / 23.6 μeV).
+
+**What this costs the group's current setup.** 12x12x4 at degauss 0.0037 underestimates $l=3$
+by **8%** and the weak harmonics by over 20%. The cheap fix is `degauss = 0.015` at the same
+mesh, which lands within 1-2% of converged for the price of a normal run; 24x24x8 at either
+smearing is the reference. Pinned in `tests/test_p3_smearing.py`.
+
+**A caveat that survives.** This is a *metal* with two bands within 130 meV of $E_F$; any
+altermagnet with that band topology will have the same problem, and the usual convergence
+indicators will not warn about it. Every new material needs this two-knob check, not a
+single-mesh run.
 
 **What this does and does not undermine.** It does *not* touch the code-to-code results: QE,
 Wannier and defumat are each compared at fixed density, and P7's 0.12% agreement and the
