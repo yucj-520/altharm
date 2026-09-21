@@ -153,12 +153,90 @@ def test_every_allowed_harmonic_is_pure_sine_at_every_u(scan):
 
 
 def test_the_noise_floor_is_itself_a_function_of_u(scan):
-    """81.8 -> 1.3 ueV, tracking band 44's distance from E_F."""
+    """81.8 -> 1.3 ueV across U = 2..5."""
     floors = {U: scan[U][1] for U in RUNS}
     assert floors[2.0] == pytest.approx(81.8e-6, rel=0.05)
     assert floors[5.0] == pytest.approx(1.3e-6, rel=0.15)
     assert floors[2.0] / floors[5.0] > 40
-    # and it falls monotonically as the band moves away from E_F
-    gaps = {U: scan[U][2].energies_ev[0, :, BAND].mean() - scan[U][2].fermi_ev for U in RUNS}
-    assert gaps[2.0] < gaps[3.0] < gaps[4.0] < gaps[5.0]
     assert floors[2.0] > floors[3.0] > floors[4.0] > floors[5.0]
+
+
+def test_the_floor_tracks_the_unresolved_tail_not_the_distance_from_ef():
+    """The correction U = 0 forced.
+
+    On U = 2..5 alone the floor falls monotonically as band 44 moves away from
+    E_F, and this file first read that as the Fermi-surface-sampling mechanism
+    of P3 seen from the other side.  Plain PBE breaks it: band 44 sits at
+    +0.0332 eV, between U=2's +0.0166 and U=3's +0.0357, yet the floor is
+    0.92 ueV -- the smallest of all five, 90x below U=2's.
+
+    What it does track is the fit residual, i.e. the part of the signal living
+    above l = 45.  That is what P3 identified as the thing that aliases in, so
+    the corrected statement is stronger than the original: a five-point
+    correlation of +0.91 against the residual, versus -0.77 against the gap.
+    """
+    import numpy as np
+    from altharm.basis import CircularBasis
+    from altharm.noise import noise_report
+    from altharm.project import project
+    from altharm.qe.reader import read_bands
+
+    folders = {0.0: "qe_cr2seas_u0", 2.0: "qe_cr2seas_u2", 3.0: "qe_cr2seas_sm12",
+               4.0: "qe_cr2seas_u4", 5.0: "qe_cr2seas_u5"}
+    if not (HERE / "data" / folders[0.0] / "data-file-schema.xml").exists():
+        pytest.skip("the plain-PBE fixture is not present")
+
+    gaps, floors, resid = [], [], []
+    for U, folder in folders.items():
+        q = read_bands(HERE / "data" / folder / "data-file-schema.xml")
+        th = np.arctan2(q.kpoints_tpiba[:, 1], q.kpoints_tpiba[:, 0])
+        dirs = np.stack([np.cos(th), np.sin(th), 0.093 * np.ones_like(th)], axis=1)
+        basis = CircularBasis(LMAX)
+        f = project(basis, dirs, q.energies_ev[0, :, BAND] - q.energies_ev[1, :, BAND])
+        gaps.append(q.energies_ev[0, :, BAND].mean() - q.fermi_ev)
+        floors.append(noise_report(f, allowed_l(basis, _ops(), dirs)).floor)
+        resid.append(f.residual_rms)
+
+    # plain PBE: middling gap, smallest floor, smallest tail
+    assert gaps[0] == pytest.approx(0.0332, abs=0.002)
+    assert gaps[1] < gaps[0] < gaps[2], "the gap is NOT monotonic in U once U=0 is in"
+    assert floors[0] == min(floors) and resid[0] == min(resid)
+    assert floors[1] / floors[0] > 50
+
+    c = lambda x, y: float(np.corrcoef(x, y)[0, 1])
+    assert c(resid, floors) > 0.85, "the floor should track the unresolved tail"
+    assert c(gaps, floors) > -0.85, "and not the distance from E_F"
+
+
+def test_plain_pbe_is_a_different_physics_not_a_neutral_baseline():
+    """Removing U is another arbitrary choice, and a qualitatively different one.
+
+    l=9 drops by 2.8x, l=21 by 4.5x, and l=15 comes out with the OPPOSITE sign
+    (-5.540 meV against +3.533 at U=3), confirming the zero crossing near U ~ 2
+    from the other side.  l=3 is not the U=2 trend continued either: 64.2 meV at
+    U=0 against 69.2 at U=2, so the behaviour between 0 and 2 is not monotonic.
+    """
+    import numpy as np
+    from altharm.basis import CircularBasis
+    from altharm.project import project
+    from altharm.qe.reader import read_bands
+
+    if not (HERE / "data" / "qe_cr2seas_u0" / "data-file-schema.xml").exists():
+        pytest.skip("the plain-PBE fixture is not present")
+    out = {}
+    for tag, folder in (("u0", "qe_cr2seas_u0"), ("u2", "qe_cr2seas_u2"),
+                        ("u3", "qe_cr2seas_sm12")):
+        q = read_bands(HERE / "data" / folder / "data-file-schema.xml")
+        th = np.arctan2(q.kpoints_tpiba[:, 1], q.kpoints_tpiba[:, 0])
+        dirs = np.stack([np.cos(th), np.sin(th), 0.093 * np.ones_like(th)], axis=1)
+        f = project(CircularBasis(LMAX), dirs,
+                    q.energies_ev[0, :, BAND] - q.energies_ev[1, :, BAND])
+        out[tag] = (f.amplitude_by_l(), dict(zip(f.labels, f.coeffs)))
+
+    assert out["u3"][0][9] / out["u0"][0][9] == pytest.approx(2.8, abs=0.3)
+    assert out["u3"][0][21] / out["u0"][0][21] == pytest.approx(4.5, abs=0.5)
+    # the sign flip
+    assert out["u0"][1][(15, "s")] < 0 < out["u3"][1][(15, "s")]
+    assert out["u0"][1][(15, "s")] * 1e3 == pytest.approx(-5.54, abs=0.2)
+    # and l=3 is not monotonic from 0 to 2
+    assert out["u0"][0][3] < out["u2"][0][3]

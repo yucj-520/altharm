@@ -708,10 +708,35 @@ rule says which harmonics *may* be non-zero; which ones *are* is a question abou
 interaction strength. Every allowed harmonic stays pure $\sin(l\theta)$ at every $U$, which is
 the control that keeps this a physics result rather than a fitting artefact.
 
-**The floor is a function of $U$ too**, 81.8 -> 1.3 μeV, while band 44's distance from $E_F$
-grows 0.017 -> 0.066 eV. That is P3's Fermi-surface-sampling mechanism from the other side: the
-closer the band to $E_F$, the worse the sampling, and $U$ is what moves it. **A quoted noise
-floor is a property of (settings, $U$), not of the material.**
+**The floor is a function of $U$ too**, 81.8 -> 1.3 μeV. **A quoted noise floor is a property
+of (settings, $U$), not of the material.**
+
+**What the floor tracks -- a correction that plain PBE forced.** On $U = 2..5$ alone the floor
+falls monotonically as band 44 moves away from $E_F$, and this phase first read that as P3's
+Fermi-surface-sampling mechanism seen from the other side. A $U = 0$ run breaks it: band 44 sits
+at +0.0332 eV, *between* $U$=2's +0.0166 and $U$=3's +0.0357, yet the floor is **0.92 μeV**, the
+smallest of all five and 90x below $U$=2's.
+
+| $U$ | band 44 $-E_F$ (eV) | floor (μeV) | residual, the $l>45$ tail (meV) |
+|---|---|---|---|
+| 0 | +0.0332 | **0.92** | **0.053** |
+| 2 | +0.0166 | 81.76 | 1.146 |
+| 3 | +0.0357 | 24.30 | 0.795 |
+| 4 | +0.0526 | 6.51 | 0.466 |
+| 5 | +0.0656 | 1.26 | 0.232 |
+
+What it does track is the **fit residual**, i.e. the signal living above $l_{max}$ -- exactly
+what P3 identified as the thing that aliases in. Five-point correlation **+0.91 against the
+residual**, -0.77 against the gap (the gap's apparent -0.94 was an artefact of the $U \geq 2$
+subset). The corrected statement is the stronger one: it confirms P3's aliasing diagnosis
+mechanistically rather than resting on a coincidence.
+
+**And plain PBE is not a neutral baseline, it is a different physics.** $l=9$ drops 2.8x,
+$l=21$ drops 4.5x, and $l=15$ comes out with the **opposite sign** (-5.540 meV against +3.533 at
+$U$=3), confirming the zero crossing near $U \approx 2$ from below. $l=3$ is not the $U=2$ trend
+continued either -- 64.2 meV at $U$=0 against 69.2 at $U$=2, so 0 to 2 is not monotonic.
+Removing $U$ therefore answers nothing: it substitutes one unargued choice for another, and for
+Cr 3d it is the physically worse one.
 
 **Consequence, and the next step.** Every coefficient in this project is a coefficient *at
 $U = 3.0$ eV* and must be reported as such. The principled fix is not a scan but a
