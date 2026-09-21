@@ -786,6 +786,49 @@ measurable" fails at $U$=2, and the three-route agreement was listed as robust h
 been measured away from $U$=3. Pinned, including the weakened forms, in
 `tests/test_p12_robustness.py`.
 
+## P13 — The pseudopotential and the functional: the last two untested inputs
+
+**Establishes:** the size of the two remaining input sensitivities the noise floor cannot see.
+P12 closed the Hubbard $U$; these were the entries `README.md` listed as "not measured".
+
+**Independent check:** one knob at a time against the corrected reference (12x12x4, `degauss`
+0.0150, $U$ = 3.0, band 44), with the band's identity verified by its distance above $E_F$
+rather than by its index -- the check P8's CoF2 result showed is not optional.
+
+**Measured**, and it completes the blind-spot table:
+
+| input | median | worst | floor sees it? |
+|---|---|---|---|
+| Hubbard $U$, per eV | **21%** | -- | no |
+| **PAW vs ultrasoft** | **9.7%** | 17.8% ($l$=45) | no |
+| **PBEsol vs PBE** | **7.3%** | 33.2% ($l$=39) | no |
+| smearing set too narrow | 12.9% | -- | no |
+| geometry at 1e-3 A | <4% | -- | partly |
+| *the floor's own number* | *0.04%* | -- | -- |
+
+**Both eat the high harmonics specifically.** $l=3$ moves -1.3% (PBEsol) and +0.4% (PAW), while
+$l=39$ moves -33.2% and -12.1% and $l=45$ moves -21.7% and -17.8%. Neither is a rescaling: the
+leading harmonic is essentially untouched and the tail -- the part this project exists to
+measure -- takes the damage.
+
+**And the floor goes *down* while the answer goes wrong:** 24.30 -> 8.15 (PBEsol) and 14.28 μeV
+(PAW), because it tracks the residual above $l_{max}$ (0.795 -> 0.495, 0.647 meV) and not the
+error. A run whose coefficients are 20% off reports a **better** noise floor than the reference.
+That is P12's mechanism correction at its sharpest, and the cleanest single demonstration that
+the floor is not an error bar on a coefficient.
+
+**A general constraint found on the way.** The first attempt used SG15 ONCV norm-conserving
+pseudopotentials, a bigger contrast with ultrasoft than PAW is. It cannot be done: their
+`<PP_PSWFC>` block is **empty**, and DFT+U needs atomic wavefunctions to build the Hubbard
+projectors, so `pw.x` stops with `determine_hubbard_occ (1): no atomic wavefunctions in
+pseudopotential file`. **A Hubbard calculation restricts which pseudopotential families exist
+for it at all** -- a real limitation on this kind of test, not a misconfiguration.
+
+A second trap on the same path: pslibrary's default Se PAW (`-dn`) carries 3d in valence, 16
+electrons rather than 6, which takes the cell from 90 electrons to 130 and stops band 44 being
+the same band. The `-n` variant restores 6; all three runs are verified at 90 electrons and 54
+KS states. Pinned in `tests/test_p13_pseudo_and_functional.py`.
+
 ## P8 — Production: MnTe and CoF2, and where the high harmonics actually are
 
 **Establishes:** the method on materials with independent literature classifications, rather
