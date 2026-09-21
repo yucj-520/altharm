@@ -595,6 +595,53 @@ agree on the coefficients, and two of them independently agree on the *error bar
 Fourier coefficients from the sampled circle), and re-running the three-route comparison at
 `degauss = 0.015`, since the coefficients above are all on the under-converged smearing.
 
+## P11 — Is the differentiable route real? — **yes, and it buys something other than speed**
+
+**Establishes:** whether `jax.grad` genuinely reaches through defumat's band structure, since the
+entire case for developing on defumat rather than on QE rests on it. If it does not, defumat is
+only a slower second opinion and the QE route (P9) is the whole method.
+
+**Independent check:** the derivative against a finite difference of the band structure it is
+supposed to be the derivative of -- two routes through the same code that share no arithmetic.
+
+**Measured: it works.** defumat already ships `defumat.response.velocity`, which builds
+`v = dH/dk` by a `jvp` at a frozen plane-wave sphere, and `band_velocities(calculation, result,
+kpoints=, nbnd=)` returns `d(eps_n)/dk` at arbitrary k-points. Against central differences at
+three random general-position k-points, all three Cartesian directions, on a 1-atom As cell:
+
+| bands (well separated) | near-degenerate |
+|---|---|
+| **1e-6** relative | up to 1e-3 relative |
+
+The degenerate case is expected rather than a defect: a band velocity is a diagonal expectation
+value, which the eigensolver's arbitrary mixing rotates inside a degenerate manifold, and the
+module says so and offers `matrix_elements` (the whole block) for a degeneracy-safe consumer.
+
+It also satisfies every hard requirement this project has: arbitrary k-points (so the circle can
+be fed to it directly), the ultrasoft `dS/dk` term (the generalised Hellmann-Feynman derivative
+`<psi|dH/dk - eps dS/dk|psi>`, from the same `jvp`), Hubbard `ns` forwarded, and collinear spin.
+
+**Cost: derivatives are ~1.5x the eigenvalues alone**, measured at nk = 24 with 16 bands.
+
+**And that is what changes the conclusion.** Values-plus-derivatives at N points carry the
+information of ~2N samples, so the effective Nyquist in $l$ doubles for 1.5x rather than 2x.
+That is a real saving and a small one -- and it is *not* the argument for defumat, because QE's
+bands step is ~20x faster per k-point to begin with (6 min vs 125 min for the same 152-point
+circle). Brute-forcing k-points in QE remains about 12x cheaper than the derivative route in
+defumat for the same effective resolution. **The derivative route does not win on the noise
+floor.**
+
+**What it does win, and what should be tested next.** The k-derivative is the easy case of a
+general capability: differentiating the harmonic coefficients with respect to *parameters*.
+The two largest open uncertainties in this project are both parameter sensitivities that the
+forbidden-harmonic floor is blind to -- the Hubbard $U$ (never tested; $U = 3.0$ eV is an
+inherited choice) and the atomic positions (P-traps: 1e-3 A degrades the floor 7x). Getting
+$\partial a_l/\partial U$ or $\partial a_l/\partial R$ by finite difference costs a full SCF per
+displacement; by autodiff it is one pass. **That, not speed, is the case for defumat**, and
+whether defumat's autodiff reaches those parameters the way it reaches $k$ is not yet known.
+
+Scripts in `examples/differentiable/`.
+
 ## P8 — Production on the group's materials
 
 **Establishes:** the final $a_l$ (and $b_l$) for the group's actual targets — MON, and whatever
