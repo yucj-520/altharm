@@ -824,11 +824,31 @@ The Fortran tool therefore tracks the corrected reference with no change to its 
 enough to redo the bands step and regenerate them (~6 min), but wavefunctions are not a
 disposable intermediate the way they are for the Python route.
 
-**Scope of v1, honestly not yet general:** collinear LSDA only; the circle must lie in the
-$k_x k_y$ plane at fixed $k_z$ (hardcoded); band identity is given explicitly rather than
-tracked (`altharm.bandtrack`'s continuity tracking is not yet ported to Fortran); symmetrization
-and the noise-floor split stay in the already-tested Python code rather than being duplicated in
-Fortran. See `qe_native/README.md`.
+**v2: the plane is read from the k-points, not assumed.** The $k_x k_y$ restriction was
+hardcoded in two places -- a check that every k-point shared one $k_z$, and a filter testing
+whether row 3 of $R$ was $(0,0,1)$. v2 fits the plane to the k-list (normal from the first three
+non-collinear points, every point then verified), measures $\theta$ in an in-plane frame
+$(e_1,e_2)$ written into the report, and generalises the filter to its coordinate-free form:
+$k' = Rk$ preserves $n\cdot k$ for every $k$ exactly when $R^{T} n = n$. The plane's *offset*
+needs no separate test, since $R^{T}n = n$ gives $n\cdot(Rk) = n\cdot k$ automatically.
+
+For $n = +\hat z$ this reduces to v1's row-3 test and the frame becomes $(x,y)$ exactly, so a
+$k_x k_y$ circle must reproduce v1 bit for bit. On the corrected Cr2SeAs reference it does:
+**all eight allowed harmonics identical** ($l=9$ differs by 2.3e-13, the rest by 0), largest
+absolute difference over all 91 coefficients **1e-14 eV**, normal detected as $(0,0,1)$, offset
+0.0550574 = $a/4c$ as it should be, and exactly four new lines in the report. Pinned in
+`tests/test_p9_arbitrary_plane.py`.
+
+**What that does not show:** v2 reproduces v1 *where v1 was valid*. No circle with a non-$+\hat
+z$ normal has been run, so v2's correctness for a general plane is untested. Closing it needs a
+bands run on e.g. a $k_y k_z$ circle with the allowed set compared against
+`altharm.symmetry`'s prediction for that plane -- the same cross-check that caught v1's
+time-reversal bug.
+
+**Scope of v2, honestly still not general:** collinear LSDA only; band identity is given
+explicitly rather than tracked (`altharm.bandtrack`'s continuity tracking is not yet ported to
+Fortran); symmetrization and the noise-floor split stay in the already-tested Python code rather
+than being duplicated in Fortran. See `qe_native/README.md`.
 
 ## Numerical traps, indexed by the phase that has to deal with each
 
