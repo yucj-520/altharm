@@ -106,3 +106,59 @@ def test_three_routes_agree_on_the_leading_harmonic_ordering(routes):
     order_dfm = sorted(ALLOWED, key=lambda l: -a_dfm[l])
     assert order_qe == order_dfm
     assert order_qe[:2] == [3, 9], "l=3 then l=9 should lead"
+
+
+# --- the production density (12x12x4), the mesh the group actually uses ---
+
+FULL = HERE / "data" / "defumat_p7" / "defumat_full.pkl"
+QE_PROD = HERE / "data" / "qe_cr2seas_dense" / "data-file-schema.xml"
+
+
+@pytest.fixture(scope="module")
+def production():
+    if not FULL.exists():
+        pytest.skip("the production-mesh defumat fixture is not present")
+    qb = read_bands(QE_PROD)
+    qe = _harmonics(qb.energies_ev[0, :, BAND] - qb.energies_ev[1, :, BAND], qb.kpoints_tpiba)
+    d = pickle.load(FULL.open("rb"))
+    ev = np.asarray(d["eigenvalues"])
+    dfm = _harmonics(ev[0, :, BAND] - ev[1, :, BAND], np.asarray(d["k_tpiba"]))
+    return qe, dfm, qb, d, ev
+
+
+def test_production_mesh_scf_agrees_with_qe(production):
+    """QE's 12x12x4 total energy minus its printed D3 term, to six digits."""
+    _, _, _, d, ev = production
+    assert ev.shape == (2, 152, 80)
+    assert d["converged"] is True and d["iterations"] == 51
+    # QE: -912.74971137 Ry with D3; its DFT-D3 term is -0.22170600 Ry
+    assert d["total_energy"] == pytest.approx(-912.74971137 + 0.22170600, abs=1e-6)
+
+
+def test_production_mesh_harmonics_agree(production):
+    """0.21% worst case on the density the group publishes from."""
+    (a_qe, _), (a_dfm, _), _, _, _ = production
+    dev = {l: abs(a_dfm[l] - a_qe[l]) / a_qe[l] for l in ALLOWED}
+    assert max(dev.values()) < 0.004, f"worst {max(dev, key=dev.get)}: {max(dev.values()):.4f}"
+    assert np.median(list(dev.values())) < 0.0015
+
+
+def test_production_mesh_noise_floors_coincide(production):
+    """27.49 vs 27.48 ueV -- 0.02% apart, tighter than at the coarse mesh.
+
+    This is the result that no single code could produce: the floor is a
+    property of the k-sampling, not of either implementation.
+    """
+    (_, floor_qe), (_, floor_dfm), _, _, _ = production
+    assert floor_qe == pytest.approx(27.49e-6, rel=0.02)
+    assert abs(floor_dfm - floor_qe) / floor_qe < 0.005
+
+
+def test_all_three_routes_on_the_production_density(production):
+    """QE, Wannier and defumat, eight harmonics, one table."""
+    (a_qe, _), (a_dfm, _), _, _, _ = production
+    wannier = {3: 59.4812, 9: 39.0640, 15: 3.1750, 21: 8.4434,
+               27: 1.4946, 33: 2.8382, 39: 0.9964, 45: 1.1423}
+    for l in ALLOWED:
+        assert a_dfm[l] * 1e3 == pytest.approx(a_qe[l] * 1e3, rel=0.004)
+        assert a_qe[l] * 1e3 == pytest.approx(wannier[l], rel=0.011)

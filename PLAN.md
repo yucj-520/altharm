@@ -540,9 +540,29 @@ one of the eight allowed harmonics. QE-vs-defumat is ~10x tighter than QE-vs-Wan
 0.5%), as it should be: the first pair solve the same equations, the second pair includes an
 interpolation. Pinned in `tests/test_p7_defumat.py`.
 
+**Confirmed on the production density too.** The 12x12x4 defumat run finished (SCF 51
+iterations / 220 min, bands 125 min). Its SCF free energy reproduces QE's 12x12x4 value minus
+QE's own printed D3 term (-912.74971137 + 0.22170600 = -912.528005 Ry) to all six digits, and
+band 44 sits 0.021 meV from QE's.
+
+| $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| QE (meV) | 59.1712 | 38.8172 | 3.1618 | 8.4211 | 1.4860 | 2.8381 | 0.9864 | 1.1468 |
+| defumat (meV) | 59.1296 | 38.7834 | 3.1613 | 8.4180 | 1.4833 | 2.8395 | 0.9843 | 1.1480 |
+| deviation | -0.07% | -0.09% | -0.02% | -0.04% | -0.19% | +0.05% | -0.21% | +0.10% |
+| Wannier (meV) | 59.4812 | 39.0640 | 3.1750 | 8.4434 | 1.4946 | 2.8382 | 0.9964 | 1.1423 |
+
+Worst 0.21%, median 0.08%. **The noise floors coincide to 0.02%: 27.49 vs 27.48 μeV** --
+tighter than the 0.04% seen at the coarse mesh, and the strongest form of the result, since a
+floor reproduced by an implementation sharing no linear algebra, no FFT, no ultrasoft
+augmentation and no Hubbard code cannot be an artefact of either one.
+
+**P7 is closed on both densities.** Two independent statements come out of it: the three routes
+agree on the coefficients, and two of them independently agree on the *error bar*.
+
 **Still open:** the derivative-based check (a Taylor expansion in $\mathbf k$ against the
-Fourier coefficients from the sampled circle), and the 12x12x4 production-mesh defumat run
-(job 20361811) which would put the three-route comparison on the production density.
+Fourier coefficients from the sampled circle), and re-running the three-route comparison at
+`degauss = 0.015`, since the coefficients above are all on the under-converged smearing.
 
 ## P8 — Production on the group's materials
 
