@@ -646,6 +646,18 @@ still came out numerically tiny. Only feeding the tool's own operator dump back 
 `altharm.symmetry.allowed_harmonics()` and comparing the predicted rule against where the real
 signal landed caught it.
 
+**Re-verified on the corrected settings.** After P3's smearing result moved every coefficient,
+`harmwave.x` was re-run on the 24x24x8 / degauss 0.0150 reference (the wavefunctions had to be
+regenerated first -- see the trap below). It reproduces the Python route to **4.8e-15 eV** at
+all eight allowed harmonics, and independently computes the same noise floor, **23.61 μeV**.
+The Fortran tool therefore tracks the corrected reference with no change to its own code.
+
+**A trap in this project's own disk hygiene.** `harmwave.x` reads a finished run through QE's
+`read_file()`, which needs the **wavefunctions**, not just the charge density and XML. Deleting
+`tmp/AB.wfc*` to save quota makes it fail with `Error in routine read_wfc (2)`. The density is
+enough to redo the bands step and regenerate them (~6 min), but wavefunctions are not a
+disposable intermediate the way they are for the Python route.
+
 **Scope of v1, honestly not yet general:** collinear LSDA only; the circle must lie in the
 $k_x k_y$ plane at fixed $k_z$ (hardcoded); band identity is given explicitly rather than
 tracked (`altharm.bandtrack`'s continuity tracking is not yet ported to Fortran); symmetrization
