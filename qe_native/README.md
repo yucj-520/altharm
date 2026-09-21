@@ -88,6 +88,16 @@ correctly and there is no need to duplicate that risk.
 
 ## Building
 
+The Makefile change is committed as `harmwave-makefile.patch` rather than
+described in prose, because "copy the bands.x target" is the kind of
+instruction that is followed slightly wrong.  It adds five lines and applies
+cleanly to **QE 7.2** (`qe-7.2`, commit `b4c5e8d`); on another release, apply it
+by hand -- it is a verbatim copy of the `bands.x` rule with the name changed.
+
+Linking needs FFTW on the path: without `module load fftw/3.3.10` (or the
+equivalent) the compile succeeds and the link fails with
+`cannot find -lfftw3`.
+
 Requires a full QE 7.2 source tree (not just the compiled binaries a module
 system provides) and the same toolchain used elsewhere in this project:
 
@@ -100,8 +110,7 @@ GF=$(mpif90 -show | grep -oE '^\S+gfortran\S*' || true)   # or locate it directl
     BLAS_LIBS="-lopenblas" LAPACK_LIBS="-lopenblas" SCALAPACK_LIBS="-lscalapack"
 make -j8 pw pp
 cp /path/to/altharm/qe_native/harmwave.f90 PP/src/
-# add the harmwave.x Makefile target (see PP/src/Makefile, copy the bands.x
-# stanza and rename) -- not yet scripted, see PLAN.md P9
+git apply /path/to/altharm/qe_native/harmwave-makefile.patch
 make harmwave.x
 ```
 

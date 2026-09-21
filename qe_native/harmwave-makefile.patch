@@ -1,0 +1,16 @@
+diff --git a/PP/src/Makefile b/PP/src/Makefile
+index e3e5f3a..af712de 100644
+--- a/PP/src/Makefile
++++ b/PP/src/Makefile
+@@ -100,6 +100,11 @@ bands.x : bands.o libpp.a $(MODULES)
+ 		bands.o libpp.a $(MODULES) $(QELIBS)
+ 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+ 
++harmwave.x : harmwave.o libpp.a $(MODULES) 
++	$(LD) $(LDFLAGS) -o $@ \
++		harmwave.o libpp.a $(MODULES) $(QELIBS)
++	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
++
+ band_interpolation.x : band_interpolation.o libpp.a $(MODULES) 
+ 	$(LD) $(LDFLAGS) -o $@ \
+ 		band_interpolation.o libpp.a $(MODULES) $(QELIBS)

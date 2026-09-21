@@ -1,5 +1,17 @@
 # altharm
 
+> **Status, 2026-09-21.** Validated end to end on Cr2SeAs; the symmetry side
+> additionally checked against literature classifications for MnTe (g-wave) and
+> CoF2 (d-wave). 239 tests. The reference coefficients are
+> **24x24x8, `degauss` 0.0150, band 44, 152-point circle at $k_z = 0.25b_3$,
+> $U = 3.0$ eV**: $l=3$ 64.293, $l=9$ 43.447, $l=15$ 3.603, $l=21$ 8.662,
+> $l=27$ 1.876, $l=33$ 2.583, $l=39$ 1.182, $l=45$ 0.985 meV, noise floor
+> 23.6 μeV. Every one of those is a coefficient *at that $U$* — see
+> ["what the noise floor does not measure"](#and-what-the-noise-floor-does-not-measure).
+> `PLAN.md` is the full record, including the phases where an earlier
+> conclusion here was wrong and had to be withdrawn.
+
+
 `altharm` extracts the angular harmonics of an altermagnet's spin splitting
 
 $$\Delta E(\mathbf k) = \varepsilon_\uparrow(\mathbf k) - \varepsilon_\downarrow(\mathbf k)$$
@@ -10,8 +22,13 @@ or a fixed-$k_z$ cut of a 3D material) as
 $$\Delta E(\theta) = \sum_l \big[a_l \cos(l\theta) + b_l \sin(l\theta)\big],$$
 
 or, for a genuinely 3D splitting, on a sphere in real spherical harmonics
-$Y_{lm}$. The leading surviving harmonic classifies the altermagnet: $l=2$ is
-d-wave, $l=4$ is g-wave, $l=6$ is i-wave. The group has already established,
+$Y_{lm}$. The leading surviving harmonic classifies the altermagnet, but the
+usual d/g/i labels count **nodal surfaces**, not $l$, and the two only coincide
+when there is no horizontal node. CoF2 (rutile) is d-wave with $l=2$: two
+vertical nodal planes. MnTe is **g-wave with $l=3$** -- three vertical planes
+from $\cos 3\theta$ plus the $k_z=0$ plane, four in total. Reading "g-wave" as
+"$l=4$" would have made this repository's own MnTe result look wrong when it is
+right. The group has already established,
 from a Wannier tight-binding fit, that MON is i-wave — $\Delta E \propto
 \cos(6\theta)$ — and that $l=6$ there is not a fit result but a consequence of
 the magnetic order breaking the crystal's mirror planes while leaving its
@@ -56,6 +73,37 @@ same footing as the signal it's being compared against. A coefficient at an
 *allowed* $l$ is only believable once it stands well above that floor. This
 turns "is the high-harmonic signal real?" from a judgement call into a number
 with a number next to it.
+
+## ...and what the noise floor does **not** measure
+
+The floor above is an error bar on the **fit**. It is not an error bar on the
+coefficient, and the difference turned out to be three orders of magnitude.
+Measured on Cr2SeAs, at $l=3$:
+
+| source of error | size | does the floor see it? |
+|---|---|---|
+| Hubbard $U$, per eV | **~21%** | no |
+| smearing set too narrow | 12.9% | no |
+| atomic positions at relaxation precision (1e-3 A) | <4% on the coefficients | partly -- it degrades the floor 7x |
+| **the floor's own number** | **0.04%** (24 μeV / 64 meV) | -- |
+
+Every one of those is an *input* to the Kohn-Sham Hamiltonian, and the floor
+measures what happens after the Hamiltonian is fixed. So the honest summary of
+what this package does is: **given a Hamiltonian, it resolves $\Delta E(\theta)$
+to tens of μeV; it says nothing about whether that Hamiltonian is the right
+one.** Three of those inputs have now been measured (`PLAN.md` P3, P12, and the
+structure-precision entry); the pseudopotential and the functional have not.
+
+The corollary that matters in practice: **a convergence check on the density is
+not a convergence check on the harmonics.** Magnetization, Hubbard occupations
+and total energy all agreed to three digits across a smearing change that moved
+the coefficients by 27%.
+
+The floor remains the right tool for the job it does -- deciding whether
+$l_\mathrm{max}$ is high enough, whether the circle is sampled densely enough,
+and whether a given harmonic is resolved at all. It bought the project a factor
+of $10^4$ (9 meV to 1 μeV). It is just not the number to quote beside a
+coefficient.
 
 ## Three routes to the same $a_l$
 
