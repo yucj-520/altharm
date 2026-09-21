@@ -718,6 +718,49 @@ $U = 3.0$ eV* and must be reported as such. The principled fix is not a scan but
 first-principles $U$: QE's `hp.x` computes it by linear response (DFPT on the Hubbard manifold),
 and it is now built in this tree. Pinned in `tests/test_p12_hubbard_u.py`.
 
+## P12b — Which conclusions survive the choice of $U$
+
+Standard practice is to pick a reasonable $U$ and check that it does not change the conclusion.
+P12's scan is what turns the second half of that sentence into a measurement. Separating the
+two groups explicitly, over $U = 2..5$ eV, band 44:
+
+**Robust**
+
+| claim | evidence |
+|---|---|
+| the allowed set is the odd multiples of 3 | pure symmetry, no DFT input |
+| every allowed harmonic is pure $\sin(l\theta)$ | worst cos/sin ratio 5e-4; cos amplitude below that run's own floor at every $U$ |
+| the leading two are $l=3$ then $l=9$ | identical ordering at all four $U$ |
+| $l=45$ is measurable | 15x (at $U$=2) to 383x (at $U$=5) the floor |
+| $l_{max}=45$ suffices and the fit is well posed | residual 0.6-1.9% of signal, condition number 1.4, at every $U$ |
+
+**Not robust**
+
+| claim | why |
+|---|---|
+| any individual coefficient | $l=3$ spans 43% over the range, ~21% per eV |
+| the full ordering | $l=15$ runs from last ($U$=2) to third ($U$=5) |
+| $l=15$ existing at all | 0.3 μeV at $U$=2, **below** that run's floor |
+| "every allowed harmonic is above the floor" | true at $U$ = 3,4,5, false at $U$ = 2 |
+
+**Not tested, and claimed for neither group:** whether the QE/Wannier/defumat agreement holds
+away from $U = 3$. All three were only ever compared there, and the Wannier model is a fit to a
+DFT run at that $U$, so closing this means refitting the wannierisation.
+
+So the defensible sentence is: *"We take $U = 3.0$ eV and have verified that the conclusions of
+this work are robust for $U \in [2,5]$ eV; the absolute coefficients vary by about 21% per eV
+and are reported at $U = 3.0$."* `hp.x` would upgrade that to a first-principles $U$, but it is
+**not a prerequisite** -- the methodological results, the three-route validation, the noise
+floor and the existence of high harmonics all sit in the robust column.
+
+**A process note that belongs in the record.** The first version of this separation was written
+in prose from a script whose pure-sine check had an empty loop body: it printed the conclusion
+without computing it. The conclusion happened to be correct. Three neighbouring claims in the
+same prose were not -- the floor called "μeV-level" is 1.3-82 μeV, "every allowed harmonic is
+measurable" fails at $U$=2, and the three-route agreement was listed as robust having never
+been measured away from $U$=3. Pinned, including the weakened forms, in
+`tests/test_p12_robustness.py`.
+
 ## P8 — Production on the group's materials
 
 **Establishes:** the final $a_l$ (and $b_l$) for the group's actual targets — MON, and whatever
