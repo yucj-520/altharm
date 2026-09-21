@@ -416,6 +416,37 @@ within 0.02).
 **Running:** scf + 152-point bands at 66 Ry and at 80 Ry, to test that prediction against real
 eigenvalues.
 
+## P6b — The corrected reference values, and what the old settings cost
+
+P3's smearing result invalidates the *absolute* coefficients everywhere else in this project.
+Every number in P3, P6 and P7 above was computed at `degauss = 0.0037`. The reference set is
+now **24x24x8 at `degauss = 0.0150`**, band 44, 152-point circle:
+
+| $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| **reference (meV)** | **64.293** | **43.447** | **3.603** | **8.662** | **1.876** | **2.583** | **1.182** | **0.985** |
+| 12x12x4 @ 0.0150 | 63.746 | 42.921 | 3.533 | 8.644 | 1.837 | 2.615 | 1.168 | 1.003 |
+| old (12x12x4 @ 0.0037) | 59.171 | 38.817 | 3.162 | 8.421 | 1.486 | 2.838 | 0.986 | 1.147 |
+| Wannier (fitted to old) | 59.481 | 39.064 | 3.175 | 8.443 | 1.495 | 2.838 | 0.996 | 1.142 |
+
+Three statements follow, and the third is the one that matters for the group's published work.
+
+1. **The correction is large and not a rescaling:** median 12.9%, worst 26.3% ($l=27$), with
+   $l=33$ and $l=45$ moving the *other* way. No single factor fixes an old number.
+2. **The affordable setting is good enough:** 12x12x4 at 0.0150 is within 1.2% median / 2.1%
+   worst of the reference, for the cost of an ordinary run.
+3. **The Wannier model inherits the error.** It was fitted to DFT at the old settings, so it
+   still agrees with the *old* DFT to ~1% and sits 12-26% from the corrected reference. P6's
+   "<1% at all eight harmonics" was therefore agreement on a **shared error**, not evidence of
+   absolute accuracy. Correcting the Wannier side means refitting the wannierisation, which is
+   the group's workflow rather than this repo's.
+
+**And the noise floor paid for none of it** -- 27.49 / 24.30 / 23.61 μeV across the three, a
+range of under 20% while the signal moved 26%. That is precisely why it never warned us, and it
+is the cleanest statement of the method's blind spot: **the forbidden-harmonic floor measures
+the fit, not whether the band structure handed to the fit is converged.** Pinned in
+`tests/test_p6_corrected_settings.py`.
+
 ## P6 — Wannier cross-check and the truncation study
 
 **Establishes:** two things at once. First, that the QE route and the group's existing
