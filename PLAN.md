@@ -631,14 +631,43 @@ circle). Brute-forcing k-points in QE remains about 12x cheaper than the derivat
 defumat for the same effective resolution. **The derivative route does not win on the noise
 floor.**
 
-**What it does win, and what should be tested next.** The k-derivative is the easy case of a
-general capability: differentiating the harmonic coefficients with respect to *parameters*.
-The two largest open uncertainties in this project are both parameter sensitivities that the
-forbidden-harmonic floor is blind to -- the Hubbard $U$ (never tested; $U = 3.0$ eV is an
-inherited choice) and the atomic positions (P-traps: 1e-3 A degrades the floor 7x). Getting
-$\partial a_l/\partial U$ or $\partial a_l/\partial R$ by finite difference costs a full SCF per
-displacement; by autodiff it is one pass. **That, not speed, is the case for defumat**, and
-whether defumat's autodiff reaches those parameters the way it reaches $k$ is not yet known.
+**Parameter derivatives are NOT the easy case, and that was measured rather than assumed.**
+The hope was that `jax.grad` would give $\partial a_l/\partial U$ or $\partial a_l/\partial R$
+in one pass, since those are the two largest uncertainties here and both are invisible to the
+forbidden-harmonic floor. It does not, and the reason is structural rather than a software gap.
+
+A frozen-density derivative is correct for $k$ because moving $k$ does not perturb the
+self-consistent potential. Moving an atom, or changing $U$, does: the density responds, and the
+eigenvalue moves again. Total-energy forces escape this by stationarity -- which is exactly why
+`defumat.forces.autodiff` differentiates `frozen_energy` and is right to -- but **an eigenvalue
+is not a stationary quantity and has no such protection.**
+
+Measured on a 2-atom As cell, $d\varepsilon_n/dx_2$ at a general k-point, comparing a finite
+difference with full SCF re-convergence (the true derivative) against one at frozen density
+(what a naive autodiff gives):
+
+| | median | worst |
+|---|---|---|
+| self-consistent response term, as a fraction of the true derivative | **66%** | **285%** |
+
+Not a correction: the dominant part, and on band 7 it flips the answer's magnitude entirely.
+Any parameter derivative of an eigenvalue therefore needs the full linear response --
+**Sternheimer / DFPT**, not `jax.grad`.
+
+**Which leaves a narrower but still real case for defumat.** It *has* a Sternheimer solver
+(`defumat.response.sternheimer`, transcribing QE's `LR_Modules/cgsolve_all.f90`,
+`ch_psi_all.f90`, `orthogonalize.f90`, `h_prec.f90`, `setup_alpha_pv.f90`), and its response
+chain is autodiff-generated where QE hand-codes a routine apiece -- its own docstring tabulates
+`incdrhoscf`/`addusdbec`/`lr_addusddens` becoming one `jvp` of the density w.r.t. the states,
+`newdq`'s `int3` becoming one `jvp` of `newd`. So **adding a new perturbation type** (a Hubbard
+$U$ derivative, a strain derivative aimed at inverse design) is genuinely cheaper there than in
+PHonon. That is the honest argument: not that autodiff makes parameter derivatives free, but
+that it makes a *new* DFPT perturbation cheaper to implement.
+
+**And the pragmatic path for the immediate question is neither.** The $U$ sensitivity does not
+need DFPT at all -- three or four QE SCF runs at different $U$ answer it in a few hours, at the
+production mesh, with no new code. That should come first, and it decides whether $\partial
+a_l/\partial U$ is worth building machinery for.
 
 Scripts in `examples/differentiable/`.
 
