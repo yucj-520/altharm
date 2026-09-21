@@ -10,7 +10,8 @@ PROGRAM harmwave
   !
   ! Reads a finished 'bands' calculation (collinear LSDA, nosym=.true.,
   ! noinv=.true., an explicit k-point list forming a circle in the k_x k_y
-  ! plane at fixed k_z) and computes, DIRECTLY from Quantum ESPRESSO's own
+  ! plane, read from the k-points rather than assumed) and computes,
+  ! DIRECTLY from Quantum ESPRESSO's own
   ! in-memory eigenvalues and its own symmetry-finding routine, two things:
   !
   !   1. The magnetic character (chi = +1 preserves the two magnetic
@@ -80,6 +81,8 @@ PROGRAM harmwave
   !
   REAL(DP), ALLOCATABLE :: theta(:), dE(:), design(:,:), coef(:), work(:)
   REAL(DP) :: kz_ref, s_sv(200)
+  REAL(DP) :: nplane(3), e1(3), e2(3), c_off, v1(3), v2(3), vn(3), nrm
+  INTEGER  :: ik2, ik3
   INTEGER :: iunit
   !
 #if defined(__MPI)
@@ -129,6 +132,66 @@ PROGRAM harmwave
   IF ( nat > 1000 ) CALL errore( 'harmwave', 'raise the hardcoded atom limit', nat )
   !
   n = nkstot / 2       ! k-points per spin channel; ik=1..n up, ik=n+1..2n down
+  !
+  IF ( n < 3 ) CALL errore( 'harmwave', 'need at least 3 k-points to define a plane', n )
+  !
+  !=====================================================================
+  ! Part 0: the circle's plane, taken FROM THE K-POINTS rather than assumed.
+  !
+  ! v1 was hardcoded to the k_x k_y plane, which is where this project's own
+  ! circles happen to lie and is not where another material's will. The plane
+  ! is over-determined by the k-list, so it is read off it: the normal from
+  ! the first three non-collinear points, then every point checked against
+  ! it. This has to run BEFORE Part 1, because the symmetry filter below
+  ! tests operations against this normal.
+  !
+  ! The in-plane frame (e1,e2) sets where theta = 0 and which way it turns.
+  ! Amplitudes do not care, individual a_l and b_l do, so the frame is
+  ! written into the report rather than left implicit. When the normal is
+  ! +z the frame is (x,y) exactly, so a k_x k_y circle reproduces v1's
+  ! numbers bit for bit.
+  !=====================================================================
+  !
+  v1(:) = xk(:,2) - xk(:,1)
+  nplane(:) = 0.0_DP
+  DO ik3 = 3, n
+     v2(:) = xk(:,ik3) - xk(:,1)
+     vn(1) = v1(2)*v2(3) - v1(3)*v2(2)
+     vn(2) = v1(3)*v2(1) - v1(1)*v2(3)
+     vn(3) = v1(1)*v2(2) - v1(2)*v2(1)
+     nrm = SQRT( SUM( vn(:)**2 ) )
+     IF ( nrm > 1.0d-8 ) THEN
+        nplane(:) = vn(:) / nrm
+        EXIT
+     END IF
+  END DO
+  IF ( SUM( nplane(:)**2 ) < 0.5_DP ) CALL errore( 'harmwave', &
+       'the k-points are collinear: no plane, so no angular harmonics', 1 )
+  !
+  ! Orient the normal so its largest component is positive: the sign of the
+  ! cross product depends on the k-list's order, and theta's sense should not.
+  IF ( nplane(MAXLOC(ABS(nplane),1)) < 0.0_DP ) nplane(:) = -nplane(:)
+  !
+  c_off = SUM( nplane(:) * xk(:,1) )
+  DO ik = 2, n
+     IF ( ABS( SUM( nplane(:) * xk(:,ik) ) - c_off ) > 1.0d-6 ) &
+        CALL errore( 'harmwave', 'k-point off the plane the first three define', ik )
+  END DO
+  !
+  ! The in-plane frame. For a +z normal this is exactly (x,y).
+  IF ( ABS(nplane(3) - 1.0_DP) < 1.0d-8 ) THEN
+     e1 = (/ 1.0_DP, 0.0_DP, 0.0_DP /)
+     e2 = (/ 0.0_DP, 1.0_DP, 0.0_DP /)
+  ELSE
+     ! e1 from the least-aligned cartesian axis, projected into the plane
+     j = MINLOC( ABS(nplane), 1 )
+     e1(:) = 0.0_DP ; e1(j) = 1.0_DP
+     e1(:) = e1(:) - SUM( e1(:)*nplane(:) ) * nplane(:)
+     e1(:) = e1(:) / SQRT( SUM( e1(:)**2 ) )
+     e2(1) = nplane(2)*e1(3) - nplane(3)*e1(2)
+     e2(2) = nplane(3)*e1(1) - nplane(1)*e1(3)
+     e2(3) = nplane(1)*e1(2) - nplane(2)*e1(1)
+  END IF
   !
   !=====================================================================
   ! Part 1: the non-magnetic parent's symmetry, from QE's own find_sym(),
@@ -211,15 +274,10 @@ PROGRAM harmwave
   ! Part 2: the raw harmonic fit, on QE's own in-memory eigenvalues.
   !=====================================================================
   !
-  kz_ref = xk(3,1)
-  DO ik = 2, n
-     IF ( ABS(xk(3,ik) - kz_ref) > 1.0d-8 ) CALL errore( 'harmwave', &
-          'v1 requires all k-points at the same k_z (a circle in the k_x k_y plane)', ik )
-  END DO
-  !
+  ! the plane was established in Part 0; theta is measured in its own frame
   ALLOCATE( theta(n), dE(n) )
   DO ik = 1, n
-     theta(ik) = ATAN2( xk(2,ik), xk(1,ik) )
+     theta(ik) = ATAN2( SUM( e2(:)*xk(:,ik) ), SUM( e1(:)*xk(:,ik) ) )
      dE(ik) = ( et(band_index,ik) - et(band_index,ik+n) ) * RYTOEV
   END DO
   !
@@ -256,6 +314,10 @@ PROGRAM harmwave
      WRITE( iunit, '(A,I0)' ) '# n (k-points per spin channel) = ', n
      WRITE( iunit, '(A,I0)' ) '# band_index = ', band_index
      WRITE( iunit, '(A,I0)' ) '# lmax = ', lmax
+     WRITE( iunit, '(A,3F16.9)' ) '# plane normal (cartesian, 2pi/alat) = ', nplane(:)
+     WRITE( iunit, '(A,F16.9)' )  '# plane offset  n.k                  = ', c_off
+     WRITE( iunit, '(A,3F16.9)' ) '# theta frame e1                     = ', e1(:)
+     WRITE( iunit, '(A,3F16.9)' ) '# theta frame e2                     = ', e2(:)
      WRITE( iunit, '(A,I0)' ) '# nsym (crystallographic, before plane filter) = ', nsym
      WRITE( iunit, '(A,I0)' ) '# nkept (plane-preserving, chi-classified ops) = ', nkept
      WRITE( iunit, '(A)' ) '#'
@@ -291,15 +353,20 @@ PROGRAM harmwave
 CONTAINS
   !
   SUBROUTINE keep_if_plane_preserving( rcand, chi_cand )
-    !! Append (rcand, chi_cand) to the kept list iff rcand leaves k_z fixed
-    !! pointwise (third row (0,0,+1) -- see the module docstring) and it is
-    !! not already present with the same character.
+    !! Append (rcand, chi_cand) to the kept list iff rcand leaves the
+    !! component along the circle's normal fixed pointwise, and it is not
+    !! already present with the same character.
+    !!
+    !! k' = R k, so n.k is preserved for every k iff R^T n = n. For n = +z
+    !! that reduces to row 3 of R being (0,0,1), which is what v1 tested
+    !! directly -- the general form is the same condition without the
+    !! assumption. The plane's OFFSET needs no separate check: if R^T n = n
+    !! then n.(Rk) = (R^T n).k = n.k = c_off automatically.
     REAL(DP), INTENT(IN) :: rcand(3,3)
     INTEGER,  INTENT(IN) :: chi_cand
     INTEGER :: jj
     LOGICAL :: dup
-    IF ( ABS(rcand(3,1)) > 1.0d-6 .OR. ABS(rcand(3,2)) > 1.0d-6 .OR. &
-         ABS(rcand(3,3) - 1.0_DP) > 1.0d-6 ) RETURN
+    IF ( ANY( ABS( MATMUL( TRANSPOSE(rcand), nplane ) - nplane ) > 1.0d-6 ) ) RETURN
     dup = .FALSE.
     DO jj = 1, nkept
        IF ( op_chi(jj) == chi_cand .AND. &

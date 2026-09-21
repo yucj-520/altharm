@@ -671,6 +671,53 @@ a_l/\partial U$ is worth building machinery for.
 
 Scripts in `examples/differentiable/`.
 
+## P12 — The Hubbard $U$: the largest uncertainty in the pipeline
+
+**Establishes:** what $U = 3.0$ eV costs. It is an inherited choice, nothing here had tested
+it, and the forbidden-harmonic floor cannot see it -- $U$ is an input to the Hamiltonian and the
+floor measures the fit. Third and worst member of the family P3's smearing result opened.
+
+**Independent check:** four full SCF + 152-point bands runs at $U = 2, 3, 4, 5$ eV, identical in
+every other respect (12x12x4, `degauss` 0.0150), scored against the hand-derived allowed set.
+
+**Measured:** band 44, amplitudes in meV.
+
+| $l$ | $U$=2 | $U$=3 | $U$=4 | $U$=5 | 2 -> 5 |
+|---|---|---|---|---|---|
+| 3 | 69.152 | 63.746 | 54.660 | 44.260 | -36% |
+| 9 | 45.094 | 42.921 | 36.080 | 28.892 | -36% |
+| 15 | **0.000** | 3.533 | 5.358 | 5.940 | switched on |
+| 21 | 9.550 | 8.644 | 6.889 | 5.141 | -46% |
+| 27 | 1.098 | 1.837 | 1.984 | 1.762 | +61% |
+| 33 | 2.962 | 2.614 | 2.069 | 1.457 | -51% |
+| 39 | 1.244 | 1.168 | 0.889 | 0.602 | -52% |
+| 45 | 1.235 | 1.003 | 0.761 | 0.482 | -61% |
+| **noise floor** | 81.8 μeV | 24.3 μeV | 6.5 μeV | 1.3 μeV | /65 |
+
+**21% per eV at the median, 24% at worst** (excluding $l=15$; it alone moves 52% from $U$=3 to
+4, which is about its zero crossing rather than a typical sensitivity). Against 12.9% for the
+smearing error, under 4% for a 1e-3 A geometry perturbation, 2.4% of $l=45$ for the floor:
+**$U$ dominates every other uncertainty this project has measured.**
+
+**It changes the shape, not the scale.** Six harmonics shrink monotonically with $U$ while
+$l=27$ rises then falls and $l=15$ grows from nothing, so no rescaling maps one $U$'s spectrum
+onto another's. $l=15$ is the sharpest case: at $U=2$ it is 0.3 μeV, **250x below that run's own
+noise floor** -- the harmonic is absent, not small -- and its coefficient is positive at
+$U$=3,4,5 approaching zero from above at 2, so it crosses zero near $U \approx 2$. A selection
+rule says which harmonics *may* be non-zero; which ones *are* is a question about the
+interaction strength. Every allowed harmonic stays pure $\sin(l\theta)$ at every $U$, which is
+the control that keeps this a physics result rather than a fitting artefact.
+
+**The floor is a function of $U$ too**, 81.8 -> 1.3 μeV, while band 44's distance from $E_F$
+grows 0.017 -> 0.066 eV. That is P3's Fermi-surface-sampling mechanism from the other side: the
+closer the band to $E_F$, the worse the sampling, and $U$ is what moves it. **A quoted noise
+floor is a property of (settings, $U$), not of the material.**
+
+**Consequence, and the next step.** Every coefficient in this project is a coefficient *at
+$U = 3.0$ eV* and must be reported as such. The principled fix is not a scan but a
+first-principles $U$: QE's `hp.x` computes it by linear response (DFPT on the Hubbard manifold),
+and it is now built in this tree. Pinned in `tests/test_p12_hubbard_u.py`.
+
 ## P8 — Production on the group's materials
 
 **Establishes:** the final $a_l$ (and $b_l$) for the group's actual targets — MON, and whatever
