@@ -786,19 +786,86 @@ measurable" fails at $U$=2, and the three-route agreement was listed as robust h
 been measured away from $U$=3. Pinned, including the weakened forms, in
 `tests/test_p12_robustness.py`.
 
-## P8 — Production on the group's materials
+## P8 — Production: MnTe and CoF2, and where the high harmonics actually are
 
-**Establishes:** the final $a_l$ (and $b_l$) for the group's actual targets — MON, and whatever
-follows Cr2SeAs — each reported together with its noise floor (P3, P4) and its cross-route
-agreement (P6, P7), so that a published coefficient is a number with an error bar rather than a
-number alone.
+**Establishes:** the method on materials with independent literature classifications, rather
+than only on the group's own Cr2SeAs where the answer comes from this project.
 
-**Independent check:** the three-route agreement carries over from P6/P7, plus, where it
-exists, comparison against the group's own earlier Wannier-only literature values — MON's
-established $\cos(6\theta)$ rule is the obvious first target to reproduce before trusting
-anything this route finds that Wannier didn't.
+**Independent check:** two systems chosen so their symmetry requires **opposite** answers on the
+same plane. MnTe's g-wave form $\Delta E \propto k_z k_\perp^3\cos 3\theta$ vanishes identically at
+$k_z=0$; CoF2's rutile d-wave $\Delta E \propto k_xk_y$ carries no $k_z$ at all and must not. One
+projector, one pipeline, two required answers that cannot both be satisfied by a systematic error.
 
-**Measured:** not yet.
+**Measured, and both hold.** Band nearest $E_F$, 152-point circle of radius $0.25|b_1|$:
+
+| | rms splitting at $k_z=0$ | required |
+|---|---|---|
+| CoF2 (U=0) | **86.6 meV** | non-zero |
+| MnTe (U=0) | **19.25 μeV** | nodal |
+| MnTe (U=4) | **0.20 μeV** | nodal |
+
+A ratio of 4500 at $U=0$ and $4\times10^5$ at $U=4$, from symmetry alone.
+
+**And the function is the right one of the two.** $l=2$ has two members, $k_xk_y$ and
+$k_x^2-k_y^2$. Rutile must give the first: F sits at $(u,u,0)$ so the $x=y$ diagonal is a mirror
+through the Co-F bonds that maps each Co to itself ($\chi=+1$), under which $k_xk_y$ is even and
+$k_x^2-k_y^2$ odd. The symmetrizer predicted it before any DFT (keeps 100% of $\sin2\theta$,
+0.00% of $\cos2\theta$); the DFT gives cos/sin = **9.5e-15**.
+
+**Neither material has a symprec cliff** -- P6_3/mmc (12+12 ops) and P4_2/mnm (8+8) stable from
+1e-6 to 1e-2, where Cr2SeAs flips at 1e-5. So that trap is not universal, but it still has to be
+scanned per structure to know.
+
+**MnTe resolves the full ladder to $l=45$.** Band 20, $U=4$: 949.38 / 53.45 / 12.18 / 3.96 /
+1.466 / 0.582 / 0.243 / 0.105 meV for $l = 3..45$, the weakest at **4493x the noise floor**.
+Three separate reasons, each confirming an earlier phase from the other side:
+
+1. a **semiconductor**, so P3's Fermi-surface sampling problem does not arise -- floor
+   0.02-0.03 μeV against Cr2SeAs's 23.6 μeV;
+2. **exact Wyckoff positions**, so no relaxation noise -- cos/sin at $l=3$ is 1e-13 to 4e-12
+   against 8.6e-10 for relaxed Cr2SeAs at the same $l$;
+3. a splitting an order of magnitude larger.
+
+Band 20's ladder is **exponential**, $A \propto e^{-l/6.35}$, $R^2 = 0.997$ over four decades,
+beating a power law -- and it passes a check that does not go through the fit: the residual left
+above $l_{max}=45$ is 0.0374 meV where the same exponential summed over $l=51..75$ gives 0.0425.
+**Band 21 is not** a clean exponential (step ratios 5.4, 10.1, 3.1, 1.25), so this is a band
+property and one band is not a law.
+
+**The headline, and it did not go as expected.** Second allowed harmonic over the leading one,
+on the band nearest $E_F$:
+
+| | leading | ratio |
+|---|---|---|
+| CoF2 | $l=2$, 46.7 meV | **0.021%** |
+| MnTe | $l=3$, 949.4 meV | **5.6%** |
+| **Cr2SeAs** | $l=3$, 64.3 meV | **67.6%** |
+
+**The two canonical altermagnets are essentially single-wave; the group's own material is the
+multi-harmonic one** -- its $l=9$ is two thirds of its $l=3$. That is where "the DFT high
+harmonic part would be genuinely new" actually lives, and now with two contrasting references.
+The comparison survives a caveat pointing the other way: CoF2's allowed set steps by 4 rather
+than 6, and a shorter step should decay *less*.
+
+**Two failure modes this phase produced, both recorded as tests.**
+
+*One overwritten circle.* Both MnTe circles are bands runs over one density, and the first job
+wrote both into `tmp/MT.save/` with the fixture copied afterwards -- so the $k_z=0$ run silently
+replaced the $k_z\ne0$ eigenvalues and the committed fixture was the wrong circle under the
+right name. Three tests failed on it, which is the only reason it surfaced. The CoF2 job had it
+right: copy out between runs.
+
+*Band indices do not survive a change of $U$.* At $U=0$ CoF2's band 30 is the valence maximum
+at -0.256 eV with a 540 meV gap to band 31; at $U=4$ both sit within 21 meV of $E_F$ and are
+**4.07 meV apart**. Comparing by index across that shows up as $l=2$ apparently collapsing from
+46.7 to 6.9 meV with the floor jumping 150x. Not a failed calculation -- both converged, moments
+agree (5.65 vs 5.72 $\mu_B$), compensation holds, Hubbard occupations symmetric. This is
+`CLAUDE.md`'s band-identity rule in a form the project had only guarded across *models with
+different band counts*, not across *values of a parameter in one code*. What does survive is the
+symmetry: $l=2$ stays pure $k_xk_y$ to 1e-11 on every band at every $U$, because a selection
+rule is a statement about the crystal and not about a band.
+
+Pinned in `tests/test_p8_mnte.py` (14) and `tests/test_p8_cof2.py` (10).
 
 ## P9 — A QE-native tool: harmonics computed inside a compiled QE executable
 

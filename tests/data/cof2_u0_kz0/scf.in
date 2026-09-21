@@ -1,0 +1,45 @@
+&CONTROL
+  calculation = 'scf'
+  prefix      = 'CF'
+  outdir      = './tmp'
+  pseudo_dir  = '/scratch/work/yuc11/pseudopotentials'
+/
+&SYSTEM
+  ibrav       = 0
+  celldm(1)   = 8.970146459
+  nat         = 6
+  ntyp        = 3
+  input_dft   = 'PBE'
+  ecutwfc     = 60
+  ecutrho     = 240
+  nspin       = 2
+  starting_magnetization(1) =  1.00
+  starting_magnetization(2) = -1.00
+  starting_magnetization(3) =  0.00
+  occupations = 'smearing'
+  smearing    = 'gaussian'
+  degauss     = 0.0150
+/
+&ELECTRONS
+  conv_thr         = 1.0d-10
+  electron_maxstep = 200
+  mixing_beta      = 0.20
+  diagonalization  = 'david'
+/
+ATOMIC_SPECIES
+  CoU  58.933195  Co_pbe_v1.2.uspp.F.UPF
+  CoD  58.933195  Co_pbe_v1.2.uspp.F.UPF
+  F    18.998403  f_pbe_v1.4.uspp.F.UPF
+CELL_PARAMETERS alat
+   1.0000000000   0.0000000000   0.0000000000
+   0.0000000000   1.0000000000   0.0000000000
+   0.0000000000   0.0000000000   0.6780479279
+ATOMIC_POSITIONS crystal
+  CoU  0.0000000000  0.0000000000  0.0000000000
+  CoD  0.5000000000  0.5000000000  0.5000000000
+  F    0.6957130030  0.6957130030  0.0000000000
+  F    0.1957130030  0.8042869970  0.5000000000
+  F    0.3042869970  0.3042869970  0.0000000000
+  F    0.8042869970  0.1957130030  0.5000000000
+K_POINTS automatic
+  10 10 14  0 0 0
