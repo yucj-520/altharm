@@ -80,19 +80,29 @@ The floor above is an error bar on the **fit**. It is not an error bar on the
 coefficient, and the difference turned out to be three orders of magnitude.
 Measured on Cr2SeAs, at $l=3$:
 
-| source of error | size | does the floor see it? |
+| source of error | size (median over the eight allowed $l$) | does the floor see it? |
 |---|---|---|
 | Hubbard $U$, per eV | **~21%** | no |
 | smearing set too narrow | 12.9% | no |
+| **PAW vs ultrasoft pseudopotential** | **9.7%** (17.8% at $l$=45) | no |
+| **PBEsol vs PBE** | **7.3%** (33.2% at $l$=39) | no |
 | atomic positions at relaxation precision (1e-3 A) | <4% on the coefficients | partly -- it degrades the floor 7x |
 | **the floor's own number** | **0.04%** (24 μeV / 64 meV) | -- |
+
+The last two are the sharpest case, because they move the floor the **wrong way**: switching
+functional or pseudopotential takes the coefficients 7-10% off while *improving* the reported
+floor (24.3 to 8.2 and 14.3 μeV). The floor tracks the signal's unresolved tail above
+$l_\mathrm{max}$, not the error. A run can look cleaner and be more wrong.
+
+They also attack the tail specifically rather than rescaling: $l=3$ moves 0.4-1.3% while
+$l=39$ moves 12-33%.
 
 Every one of those is an *input* to the Kohn-Sham Hamiltonian, and the floor
 measures what happens after the Hamiltonian is fixed. So the honest summary of
 what this package does is: **given a Hamiltonian, it resolves $\Delta E(\theta)$
 to tens of μeV; it says nothing about whether that Hamiltonian is the right
-one.** Three of those inputs have now been measured (`PLAN.md` P3, P12, and the
-structure-precision entry); the pseudopotential and the functional have not.
+one.** All five have now been measured (`PLAN.md` P3, P12, P13 and the
+structure-precision entry).
 
 The corollary that matters in practice: **a convergence check on the density is
 not a convergence check on the harmonics.** Magnetization, Hubbard occupations
@@ -122,6 +132,17 @@ different failure modes. Agreement between them, harmonic by harmonic, is the
 validation; disagreement says which route to distrust for which $l$.
 
 ## Known numerical traps
+
+- **A Hubbard calculation restricts which pseudopotentials exist for it.** SG15 ONCV
+  norm-conserving files have an **empty** `<PP_PSWFC>` block, and DFT+U needs atomic
+  wavefunctions to build the Hubbard projectors, so `pw.x` stops with
+  `determine_hubbard_occ (1): no atomic wavefunctions in pseudopotential file`. Any
+  pseudopotential sensitivity test on a `+U` system has to stay inside the families that
+  carry wavefunctions (GBRV ultrasoft, pslibrary PAW). Measured in P13.
+- **Check the valence configuration when swapping families.** pslibrary's default Se PAW
+  (`-dn`) carries 3d in valence -- 16 electrons rather than 6 -- which would have taken
+  Cr2SeAs from 90 electrons to 130 and silently changed which state band 44 names. The `-n`
+  variant matches. P8's CoF2 entry is what this looks like when it is not checked.
 
 Things this project is built to measure rather than assume away. The numbers
 belong in `PLAN.md`; this is the list of what to watch for.
