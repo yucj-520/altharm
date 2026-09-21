@@ -682,6 +682,39 @@ belongs once a phase measures it.
   splitting. `spin_operations` now refuses that case by name and points at
   `symprec_scan`; the cliff is regression-tested in `tests/test_cr2seas_regression.py`.
   **Every new structure must be scanned before its harmonics are believed.**
+- **Structure precision.** *Measured.* The relaxation that produced this structure converges
+  forces, not coordinates, and leaves atoms good to ~1e-3 A; the sublattice-exchanging mirror
+  $M_z$ holds to **1.6e-5 A**. Two orders of magnitude separate them. Random Cartesian
+  displacements of per-component RMS `amp`, fixed seed, rigid translation removed:
+
+  | amp (A) | worst allowed-$l$ shift | noise floor | $l=0$ |
+  |---|---|---|---|
+  | 0 | -- | 24.3 μeV | 10.7 μeV |
+  | 1e-4 | 0.36% | 29.4 μeV | 76.3 μeV |
+  | **1e-3** (relaxation) | **3.70%** | **166.4 μeV** | **676.0 μeV** |
+  | 1e-2 | 34.8% | 1695.3 μeV | 6708.4 μeV |
+
+  **Relaxation precision is good enough for the coefficients and not for the error bar**: at
+  1e-3 A the strong harmonics move under 0.3% while the floor degrades 7x. Since the floor is
+  what says how much to trust a coefficient, such a structure yields numbers one can mostly
+  believe and no honest way to say so. Recovering the intrinsic ~24 μeV needs ~1e-4 A, so the
+  structure must be **symmetrised before fitting**, not taken raw from the relaxation.
+  $l=0$ is the sharpest single indicator -- the angular average must be exactly zero for a
+  compensated altermagnet, and it reads 676 μeV at 1e-3 A.
+
+  On the symmetry side the collapse is a cliff at **1.99e-5 A**: the allowed set goes from 8
+  straight to all 49, never losing two or three. The symprec that survives an amplitude `amp`
+  is ~5.4x `amp`, so a 1e-3 A structure needs symprec >= 5.4e-3, i.e. **500x spglib's default**.
+
+  **The forbidden spectrum identifies which generator broke**, which is more than an error bar:
+  z-displacements break $M_z$ (even multiples of 3 leak in, worst $l=12$, and $l=0$ rises to
+  536 μeV), in-plane displacements break $C_3$ (non-multiples leak in, worst $l=2$, while
+  $l=0$ stays 17x smaller because the sublattice compensation survives). This reproduces the
+  spglib classification exactly (z-noise -> P3m1, 6 preserving, 0 exchanging; in-plane -> P1).
+  Corollary: in-plane noise leaves every coefficient within 0.18% of baseline while multiplying
+  the floor by 6.7 -- **coefficient stability is not evidence that a structure is symmetric
+  enough**. Pinned in `tests/test_geometry_precision.py` (15 tests).
+
 - **Angle convention.** Fractional-coordinate angles apply the lattice metric and mix harmonics
   by $\sqrt3$ on a hexagonal cell. Structurally prevented rather than merely tested:
   `altharm.basis` takes only Cartesian directions. Still worth a regression test the day
