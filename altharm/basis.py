@@ -89,9 +89,36 @@ class CircularBasis:
     def size(self) -> int:
         return len(self.labels)
 
-    def angles(self, dirs):
-        """Cartesian directions -> angle in the plane of the circle."""
+    def angles(self, dirs, check=True):
+        """Cartesian directions -> angle in the plane of the circle.
+
+        The directions have to lie on a cone about this basis's own normal,
+        ``e1 x e2`` -- a great circle through the origin (``d.n = 0``) or a
+        circle at fixed offset (``d.n = const``).  Anything else is not a curve
+        this basis parametrises, and the angle it would return is not a
+        monotone coordinate along the sample.
+
+        The check exists because getting it wrong is silent.  Handing a circle
+        in the y-z plane to a basis left at its default x-y frame returns
+        angles, a design matrix and a plausible-looking allowed set -- on
+        Cr2SeAs, thirteen scattered ``l`` where the correct frame gives the even
+        ones.  Nothing raises, and the symmetrizer's off-block elements go from
+        1e-7 to 165 without anyone being told.
+
+        Pass ``check=False`` only when the caller has already established the
+        geometry, which `evaluate` does after checking once.
+        """
         d = _unit(np.atleast_2d(dirs))
+        if check and d.shape[0] > 2:
+            n = np.cross(self.e1, self.e2)
+            spread = float(np.ptp(d @ n))
+            if spread > 1e-6:
+                raise ValueError(
+                    f"directions are not on a cone about this basis's normal "
+                    f"(d.n spans {spread:.3g}); the circle's plane and the "
+                    f"basis frame (e1, e2) disagree. Construct the basis with "
+                    f"e1/e2 spanning the circle's own plane."
+                )
         return np.arctan2(d @ self.e2, d @ self.e1)
 
     def evaluate(self, dirs):

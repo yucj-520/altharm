@@ -1036,6 +1036,24 @@ belongs once a phase measures it.
   the floor by 6.7 -- **coefficient stability is not evidence that a structure is symmetric
   enough**. Pinned in `tests/test_geometry_precision.py` (15 tests).
 
+- **The circle's plane and the basis frame must be the same plane.** *Measured, and it was
+  silent.* `CircularBasis` takes `e1`/`e2` and measures the angle there; handing it directions
+  from another plane returns angles, a design matrix and an allowed set, all plausible and all
+  wrong. On a 152-point Cr2SeAs circle in the $k_yk_z$ plane:
+
+  | basis frame | $d\cdot n$ spread | off-block max in $S$ | allowed $l$ |
+  |---|---|---|---|
+  | default $(x,y)$ -- wrong | 1.96 | **165** | {3,6,8,9,10,11,12,13,14,15,16,19,21} |
+  | $(y,z)$ -- correct | 5.6e-17 | 1.4e-07 | **{2,4,6,...,24}** |
+
+  The correct frame gives the even harmonics, which is what the four surviving operations
+  require (one is a two-fold axis sending $\theta \to \theta+\pi$). The wrong one gives thirteen
+  scattered values with no group-theoretic reading, because the symmetrizer stops being
+  block-diagonal in $l$ and `allowed_harmonics`'s per-block diagonalisation loses its premise.
+  `angles()` now refuses directions that are not on a cone about its own normal; found while
+  setting up P9's non-$+\hat z$ verification, and pinned in
+  `tests/test_circular_basis_frame.py`.
+
 - **Angle convention.** Fractional-coordinate angles apply the lattice metric and mix harmonics
   by $\sqrt3$ on a hexagonal cell. Structurally prevented rather than merely tested:
   `altharm.basis` takes only Cartesian directions. Still worth a regression test the day
