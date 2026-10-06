@@ -1514,3 +1514,69 @@ rather than an $N$ effect. The job script now checks the HUBBARD card is present
 is active in `bands.out`, and launches every MPI binary through `srun`.
 
 Tests: `tests/test_p14_sampling_aliasing.py` (the nsweep block).
+
+---
+
+## P19 — the linear-response $U$ is twice the one in production
+
+**Open since P12**, which measured what $U = 3.0$ eV costs but could not say whether 3.0 is the
+right number: it is an inherited choice and nothing in this project had tested it. The
+linear-response route (QE's `hp.x`, DFPT) answers that directly. Job 20796619, finished
+2026-10-06.
+
+| | |
+|---|---|
+| **linear-response $U$** | **6.3858 eV** (CrU) / **6.3880 eV** (CrD) |
+| **$U$ used in every production run** | **3.0 eV** |
+| ratio | **2.13x**, a difference of 3.39 eV |
+
+The two magnetic sublattices agree to 0.002 eV, which symmetry requires and is the check that
+the run is self-consistent rather than drifting.
+
+**Verified before believing it:** the Hubbard projectors are `ortho-atomic`, matching production;
+the SCF underneath ran at $U = 0.0001$ eV, which is the correct linear-response procedure (the
+response is taken about $U \approx 0$), not a typo.
+
+### What it implies, and what it does not
+
+P12's scan is monotone -- every coefficient *falls* as $U$ rises:
+
+| $l$ | $U$=2 | $U$=3 | $U$=5 | 2 → 5 |
+|---|---|---|---|---|
+| 3 | 69.152 | 63.746 | 44.260 | −36% |
+| 45 | 1.235 | 1.003 | 0.482 | −61% |
+
+So the direction is unambiguous: **the production coefficients are systematically too large.**
+
+**But 6.39 eV lies outside the 2–5 eV range P12 scanned, so the magnitude cannot be stated.**
+Extrapolating P12's "21% per eV" across 3.39 eV would be arithmetic, not measurement. Closing
+that needs one 152-point bands run at $U \approx 6.4$ -- the same cost as any other single bands
+run, about 40 minutes.
+
+### Two reservations that must be quoted with the number
+
+1. **The q-mesh is 2×2×1 (2 q-points).** `hp.x` results depend on it, and this is coarse.
+2. **`conv_thr_chi` was loosened to 1e-4.** At 1e-6 the response would not converge -- the
+   residue oscillated at 1e-4 with roughly 230 further iterations needed (recorded in P12's
+   notes at the time).
+
+So 6.39 eV is not a number to put in a paper. It is a strong signal that **the production $U$ is
+badly low**, and since P12 established that $U$ dominates every other uncertainty this project
+has measured, that makes it the largest open issue in the pipeline.
+
+### Why it took four attempts, and what the failure was
+
+Three of the four response matrices existed since 2026-09-22; the collection step died in 25
+seconds and was not revisited. The error was `AB.chi.pert_1.dat does not exist`, and the cause
+was a **missing stage**, not a broken one. QE's HP workflow is three steps:
+
+```
+dns.pert_i.q_j  --(sum_pertq, summing over q per atom)-->  chi.pert_i  --(compute_hp)-->  U
+```
+
+The runs had produced the `dns` files and then jumped straight to `compute_hp`, skipping
+`sum_pertq` entirely. Adding that stage took 40 minutes of walltime, all of it queueing --
+summing files already on disk is close to free. **Several days of DFPT was sitting one cheap
+step short of an answer for two weeks.**
+
+Fixture: `tests/data/hp_u/AB.Hubbard_parameters.dat`. Tests: `tests/test_p19_linear_response_u.py`.
