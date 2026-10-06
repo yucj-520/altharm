@@ -83,6 +83,7 @@ Measured on Cr2SeAs, at $l=3$:
 | source of error | size (median over the eight allowed $l$) | does the floor see it? |
 |---|---|---|
 | Hubbard $U$, per eV | **~21%** | no |
+| **the value of $U$ itself** | **production uses 3.0 eV; linear response says 6.39** | no |
 | smearing set too narrow | 12.9% | no |
 | **PAW vs ultrasoft pseudopotential** | **9.7%** (17.8% at $l$=45) | no |
 | **PBEsol vs PBE** | **7.3%** (33.2% at $l$=39) | no |
@@ -109,6 +110,14 @@ straight onto the reported coefficients, ~18% median error. Across $N=120\ldots1
 is *monotonically anti-correlated* with the true error. Use $N$ coprime to that period --
 `altharm.sampling.sampling_report` will say which; this project's own 152 shares a factor and is
 ~5x worse than a coprime count at the same cost. See `PLAN.md` P14.
+
+**The second row is not a sensitivity, it is a discrepancy.** P12 measured what $U = 3.0$ eV
+costs; P19 asked whether 3.0 is the right number and found that QE's `hp.x` gives
+**6.386/6.388 eV** -- a factor of 2.13. P12's scan is monotone (every coefficient falls as $U$
+rises, $l$=3 by 36% and $l$=45 by 61% from $U$=2 to 5), so the direction is certain: the
+published coefficients are systematically too large. The magnitude is not, because 6.39 lies
+outside the 2-5 eV range that was scanned. Two reservations belong with that number: the q-mesh
+was 2x2x1 and `conv_thr_chi` had to be loosened to 1e-4. See `PLAN.md` P19.
 
 Every one of those is an *input* to the Kohn-Sham Hamiltonian, and the floor
 measures what happens after the Hamiltonian is fixed. So the honest summary of
