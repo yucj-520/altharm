@@ -1117,3 +1117,167 @@ eight harmonics) rather than leaving it a coincidence, and it reframes the DFT r
 DFT is *not* needed to recover harmonics a Wannier model structurally cannot represent — it can
 represent them. DFT is needed because it removes the fit's *quantitative* truncation error and
 because it needs no Wannierisation at all, which matters for screening new materials.
+
+---
+
+## P14 — the sample count: the floor is anti-correlated with the error
+
+**Status: mechanism established two independent ways; the DFT confirmation is prepared and
+has not been run.**
+
+P3/P12/P13 established five inputs the forbidden-harmonic floor is blind to. Blindness is
+survivable. This phase found a sixth where it is worse than blind.
+
+### P14.1 The y-z circle (job 20383535, run 2026-09-22, read 2026-10-01)
+
+harmwave.x v2 on a great circle in the $k_y k_z$ plane, same density as `sm24`. It reads the
+plane from the k-points correctly: normal $(1,0,0)$, offset 0, frame $(e_1,e_2)=(\hat y,\hat z)$,
+4 of 12 operations kept. The allowed set matches `altharm.symmetry`'s independent prediction,
+$l = 2,4,\dots,24$ — and the coefficients are sharper than that prediction: **even $l$, sine
+only**, odd $l$ at 1e-14 eV, even-$l$ cosine at 5.7e-7 eV, even-$l$ sine up to 20.4 meV. Pure
+sine means $\Delta E$ is odd in $k_z$; consistently, $\Delta E(k_z{=}0) = -3.4$ μeV.
+
+This closes P9's open item ("no circle with a non-+ẑ normal has been run").
+
+### P14.2 The floor has channels, and they differ by $10^7$
+
+The exact zeros prompted a check that harmwave.x does not symmetrise before fitting — it does
+not (`design` is raw cos/sin columns, then `DGELSS`, harmwave.f90:285-295). So the zeros are a
+property of the data. Asking the data directly how well it obeys $\Delta E(R\mathbf k) =
+\chi\,\Delta E(\mathbf k)$ for each operation that permutes the sample points:
+
+| circle | $\chi=+1$ | $\chi=-1$ |
+|---|---|---|
+| $k_yk_z$ | 2.8e-14 eV | 1.09 μeV (+ a separate 4.74 μeV rigid $l=0$ offset) |
+| $k_xk_y$ | 0.072 μeV | 1.60 μeV |
+
+$\chi=+1$ relates $\varepsilon_\uparrow(\mathbf k)$ to $\varepsilon_\uparrow(R\mathbf k)$ — same
+spin block, exact by construction, so what is left is k-point placement roundoff. $\chi=-1$
+relates $\varepsilon_\uparrow$ to $\varepsilon_\downarrow$ and holds only as well as the
+self-consistent density respects sublattice exchange.
+
+### P14.3 Where the published 23.6 μeV floor actually comes from
+
+No operation that permutes the samples has a residual above 1.6 μeV, so the floor cannot come
+from one. Splitting all 90 coefficients of the $k_xk_y$ run by what forbids each:
+
+| group | n | median | max |
+|---|---|---|---|
+| allowed | 8 | 3093 μeV | 64293 μeV |
+| forbidden by an operation the grid **can** represent | 67 | **0.0040 μeV** | 1.11 μeV |
+| forbidden **only** by C3, which it **cannot** | 15 | **24.70 μeV** | 75.0 μeV |
+
+The published floor is the third row. 120° is not a multiple of 360°/152, so C3 is the one
+operation this grid cannot represent, and the floor measures the aliasing of that single
+constraint. This gives P3's empirical result (9 meV → 1.01 μeV over 56 → 152 → 304 points) a
+mechanism rather than a correlation.
+
+### P14.4 The rule, and the inversion
+
+A material's splitting contains only allowed harmonics at every order; on Cr2SeAs the allowed
+set is $l \equiv 3 \pmod 6$, a lattice of period $p=6$. The part above $l_\mathrm{max}$ aliases
+to $l' = |l - mN|$, which is allowed exactly when $mN \equiv 0 \pmod p$. So the tail first
+reaches the signal at alias order
+
+$$m = p / \gcd(N, p).$$
+
+Measured on a synthetic signal whose truth is known exactly (only allowed harmonics, no noise,
+tail fitted to the real coefficients), sweeping every $N$ from 120 to 199:
+
+| $\gcd(N,6)$ | $m$ | reported floor | true error (median / max) |
+|---|---|---|---|
+| 6 | 1 | **0 μeV** | **18.1% / 36.2%** |
+| 3 | 2 | 160 μeV | 3.7% / 6.3% |
+| 2 | 3 | 221 μeV | 1.4% / 2.6% |
+| 1 | 6 | 239 μeV | **0.29% / 1.04%** |
+
+Monotone, no exceptions in that range, and stable across five tail decay exponents. When $p \mid
+N$ the strongest alias of every unresolved harmonic lands directly on a reported coefficient and
+**no forbidden channel receives anything at all**: the floor reads zero and the answer is ~20%
+wrong. **The floor is monotonically anti-correlated with the error it is supposed to report.**
+
+Practical rule: **take $N$ coprime to the period of the allowed set; never a multiple of it.**
+This project's own 152 is $\gcd=2$ — not the catastrophic case, but ~5x worse than a coprime
+count at identical cost, and chosen by accident.
+
+### P14.5 The y-z run is itself the catastrophic case
+
+Its allowed set is every even $l$, so $p=2$, and $N=152$ is even: alias order 1. The signature
+is exactly as predicted — it has no C3-style channel at all, and every forbidden amplitude sits
+at the machine/SCF level. Its own coefficients therefore carry the tail as error, and its
+forbidden channels cannot report it.
+
+### P14.6 The mechanism, measured on real eigenvalues at two sample counts
+
+The synthetic tests control the truth but have no SCF noise; the classification is real data at
+one sample count. The 304-point circle closes the gap between them with no new DFT run, by
+being used twice: fitted to its own Nyquist ($l=151$) it measures the high-$l$ tail directly,
+and subsampled to every second point it *is* a 152-point circle on identical eigenvalues.
+
+On a 152-point grid $\sin(l\theta_j)$ with $l = 152-l'$ folds to $-\sin(l'\theta_j)$, so the
+prediction is signed: $b_{l'} = -b_{152-l'}$.
+
+| $l'$ | from | $b_{l'}$ at N=152 | $-b_{152-l'}$ at N=304 | residual |
+|---|---|---|---|---|
+| 5 | 147 | −33.755 μeV | −32.617 μeV | −3.49% |
+| 11 | 141 | +40.339 | +39.324 | +2.58% |
+| 17 | 135 | −44.636 | −43.724 | −2.08% |
+| 23 | 129 | +54.666 | +53.835 | +1.54% |
+| 29 | 123 | −60.772 | −60.059 | −1.19% |
+| 35 | 117 | +74.249 | +73.591 | +0.89% |
+| 41 | 111 | −86.259 | −85.661 | −0.70% |
+
+**All seven signs correct**, magnitudes within 0.7–3.5%, and the residual shrinks monotonically
+with $l'$ — it is what the second fold partner ($l = 152+l'$, above 304's Nyquist) would supply,
+implying $b_{157} \approx -1.14$ μeV and $b_{193} \approx -0.60$ μeV.
+
+**So the forbidden-harmonic "noise floor" is not noise.** It is the signal's own unresolved
+tail, folded down, and it can be predicted from an independent measurement of that tail to a few
+percent. Control: the eight allowed coefficients agree between the two counts to <0.02%, as
+required since both are $\gcd=2$ and neither is corrupted at first order.
+
+### What is NOT done
+
+P14.6 measures the *mechanism* on real data, but not the *catastrophic case*: no subsample of a
+304-point grid is divisible by 3, so the $m=1$ regime — floor reading zero while the
+coefficients absorb the tail — remains shown only synthetically. The DFT confirmation is
+prepared in `altharm_runs/nsweep` (N=150/151/153 on $k_xk_y$ and N=151 on $k_yk_z$, all reusing
+the `sm24` density, each with its own outdir) and **has not been submitted**. Prediction: N=150
+reports a floor near 0.004 μeV and shifts the coefficients by order 10%; YZ151 shifts relative
+to the existing 152-point y-z result. Until then P14.3 is an observation about one run and
+P14.4 is a statement about a model.
+
+Code: `altharm/sampling.py`. Tests: `tests/test_p14_sampling_aliasing.py` (14).
+Notebook: `notebooks/P14_sampling_aliasing.ipynb` (executed).
+
+### P14.7 The rule across three materials, and what bounds the damage
+
+The allowed-set period is a property of the magnetic point group, not of this project's
+conventions, so the rule has to be checked where that period differs. On the existing P8
+fixtures:
+
+| material | N | p | gcd | m | floor | next/leading |
+|---|---|---|---|---|---|---|
+| MnTe U=4 | 152 | 6 | 2 | 3 | 0.0234 μeV | 5.630% |
+| **CoF2 U=0** | 152 | 4 | **4** | **1** | 0.0369 μeV | **0.021%** |
+| Cr2SeAs U=3 | 304 | 6 | 2 | 3 | 1.0082 μeV | **65.601%** |
+
+**CoF2's allowed set is $l = 2,6,10,14$ — period 4 — and 152 is divisible by 4, so the
+published P8 CoF2 runs have been in the $m=1$ regime all along.** That went unnoticed.
+
+It did them no harm, and the reason is the refinement that matters: **the damage at $m=1$ is
+proportional to the unresolved tail**, and CoF2 barely has one. Verified synthetically by
+scanning the tail amplitude at fixed $N=150$ — the error tracks the tail and vanishes with it.
+
+Two consequences:
+
+1. **A low floor does not diagnose $m=1$.** MnTe is at $m=3$ and its floor (0.0234 μeV) is
+   *lower* than CoF2's at $m=1$ (0.0369 μeV). Both are low because both materials are nearly
+   single-wave, not because of their sampling.
+2. **The failure mode is not uniform across materials — it bites hardest on the interesting
+   ones.** A steep harmonic ladder is nearly immune to any $N$; a slow one is at risk. Cr2SeAs,
+   whose second harmonic is 66% of its first, is precisely the kind of material this project
+   exists to study, and precisely the kind $m=1$ would destroy.
+
+**Corollary for P8:** CoF2's numbers stand, but its sample count was lucky rather than chosen.
+Confirming them would want a rerun at $N$ coprime to 4.

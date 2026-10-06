@@ -24,6 +24,8 @@ Nothing raised.  The guard added to `angles()` is what makes it raise now, and
 this file is the record of what it costs to not have one.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -75,3 +77,83 @@ def test_the_guard_does_not_fire_on_two_directions():
 def test_evaluate_inherits_the_guard():
     with pytest.raises(ValueError, match="not on a cone"):
         CircularBasis(8).evaluate(_yz_circle())
+
+
+# --------------------------------------------------------------------------
+# why the cone guard is not duplicated upstream as an orthogonality check
+# --------------------------------------------------------------------------
+#
+# The guard's message used to blame the frame (e1, e2) only.  That is one
+# cause; the other is a cell that is not the lattice its symmetry operations
+# belong to, which makes their Cartesian form slightly non-orthogonal and
+# tilts a rotated circle off its own cone.  A mistyped lattice constant does
+# it, and the frame is then innocent.
+#
+# Catching that at its source -- raising when |R R^T - I| exceeds a threshold
+# in _cartesian_rotation -- was implemented and REVERTED, because no threshold
+# separates the two populations.  Measured over all 28 QE fixtures plus the
+# two hard-coded P8 structures:
+#
+#   cubic / tetragonal (CoF2, Fe)                      0
+#   hexagonal, exact Wyckoff (MnTe)                    2.7e-11
+#   hexagonal, relaxed, from QE's XML (Cr2SeAs)        2.2e-07   <- legitimate
+#   one lattice constant wrong by 16% (MnTe c)         5.2e-06   <- broken
+#
+# A factor of 24 between the worst legitimate case and the broken one is too
+# narrow for a hard error: the project's own main material already sits at
+# 2.2e-07, so a slightly rougher cell would be rejected for no reason.  The
+# consequence is caught downstream instead, where it is unambiguous.
+#
+# The spread has one cause.  A cubic or tetragonal cell carries no sqrt(3), so
+# its Cartesian rotations are exact; a hexagonal cell's C3 is only as orthogonal
+# as its stored b_y approximates (sqrt(3)/2)a.  MnTe's cell is good to 1.8e-11
+# there and Cr2SeAs's only to 2.9e-08 -- that is the whole four orders.  So
+# "try another material" cannot rescue a threshold: the spread between
+# materials IS the obstacle, and this project's own is at the bad end.
+#
+# Orthogonalising rot_cart (polar decomposition) was also considered and
+# rejected.  It would remove the symptom for a legitimate cell and equally for
+# a wrong one, handing back clean operations of the wrong structure with
+# nothing raised anywhere -- the silent-wrong-answer mode this package exists
+# to prevent.
+
+def test_cr2seas_cartesian_rotations_are_not_exactly_orthogonal():
+    """The measurement that killed the upstream check -- keep it visible."""
+    import spglib
+    from altharm.qe.reader import read_structure
+
+    st = read_structure(Path(__file__).parent / "data" / "qe_cr2seas_sm24"
+                        / "data-file-schema.xml")
+    ds = spglib.get_symmetry_dataset(
+        (st.cell_ang, st.scaled_positions, st.numbers), symprec=1e-4)
+    rots = ds.rotations if hasattr(ds, "rotations") else ds["rotations"]
+    a = np.asarray(st.cell_ang, float)
+    worst = max(
+        float(np.abs((a.T @ np.asarray(r, float) @ np.linalg.inv(a.T))
+                     @ (a.T @ np.asarray(r, float) @ np.linalg.inv(a.T)).T
+                     - np.eye(3)).max())
+        for r in rots)
+    assert 1e-8 < worst < 1e-6, worst       # legitimate, yet above 1e-8
+
+
+def test_spin_operations_accepts_a_cell_that_is_merely_imprecise():
+    """It must not raise on Cr2SeAs, whatever a tidier material would give."""
+    import spglib
+    from altharm.qe.reader import read_structure
+    from altharm.symmetry import spin_operations
+
+    st = read_structure(Path(__file__).parent / "data" / "qe_cr2seas_sm24"
+                        / "data-file-schema.xml")
+    ops = spin_operations(st.cell_ang, st.scaled_positions, st.numbers,
+                          st.magmoms, symprec=1e-3)
+    assert len(ops) > 0
+
+
+def test_the_guard_message_names_both_causes():
+    b = CircularBasis(8, e1=(1, 0, 0), e2=(0, 1, 0))
+    dirs = np.array([[0.0, np.cos(t), np.sin(t)] for t in
+                     np.linspace(0, 2 * np.pi, 32, endpoint=False)])
+    with pytest.raises(ValueError) as e:
+        b.angles(dirs)
+    msg = str(e.value)
+    assert "e1, e2" in msg and "cell" in msg and "non-orthogonal" in msg

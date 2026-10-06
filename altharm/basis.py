@@ -115,9 +115,15 @@ class CircularBasis:
             if spread > 1e-6:
                 raise ValueError(
                     f"directions are not on a cone about this basis's normal "
-                    f"(d.n spans {spread:.3g}); the circle's plane and the "
-                    f"basis frame (e1, e2) disagree. Construct the basis with "
-                    f"e1/e2 spanning the circle's own plane."
+                    f"(d.n spans {spread:.3g}). Two things cause this. Either "
+                    f"the circle's plane and the basis frame (e1, e2) disagree "
+                    f"-- construct the basis with e1/e2 spanning the circle's "
+                    f"own plane -- or, if these directions were rotated by a "
+                    f"symmetry operation, the cell those operations were built "
+                    f"from is not the lattice they belong to, which makes their "
+                    f"Cartesian form slightly non-orthogonal and tilts the "
+                    f"circle off its cone. A single mistyped lattice constant "
+                    f"does the second, and the frame is then innocent."
                 )
         return np.arctan2(d @ self.e2, d @ self.e1)
 

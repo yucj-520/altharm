@@ -75,6 +75,15 @@ def _cartesian_rotation(rot_frac, cell):
     ``x'_i = R_ij x_j``, the Cartesian operation on column vectors is
     ``A^T R A^{-T}``.  It comes out orthogonal whenever ``R`` is a genuine
     operation of that lattice, which is the check the tests lean on.
+
+    It is deliberately *not* enforced here.  Enforcing it was tried and
+    reverted: the deviation is 0 for a cubic or tetragonal cell but 2.2e-7 for
+    Cr2SeAs, whose hexagonal cell is written to finite precision in QE's XML,
+    while a cell with a lattice constant wrong by 16% gives 5.2e-6.  A factor
+    of 24 between legitimate and broken is too narrow to put a hard error in --
+    the threshold would reject this project's own main material on a slightly
+    worse cell.  :meth:`CircularBasis.angles` catches the consequence
+    downstream instead, and says there that a mismatched cell is a suspect.
     """
     A = np.asarray(cell, dtype=float)
     return A.T @ np.asarray(rot_frac, dtype=float) @ np.linalg.inv(A.T)

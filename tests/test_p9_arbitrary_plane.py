@@ -22,10 +22,13 @@ come out bit for bit the same -- which is what this file checks.
 - the report gains exactly four lines, all of them the frame
 
 **The gap this does NOT close.** It shows v2 reproduces v1 where v1 was valid.
-It does not show v2 is *correct* for a plane whose normal is not +z, because no
-such circle has been run.  Closing that needs a bands run on, say, a k_y k_z
-circle, with the allowed set compared against `altharm.symmetry`'s prediction
-for that plane -- the same cross-check that caught v1's time-reversal bug.
+It did not show v2 is *correct* for a plane whose normal is not +z.  **That gap
+is now closed** (job 20383535, read 2026-10-01): a great circle in the k_y k_z
+plane, normal (1,0,0), offset 0, frame (e1,e2) = (y,z), 4 of 12 operations kept.
+Its allowed set is l = 2,4,...,24, matching `altharm.symmetry`'s independent
+prediction for that plane, and the coefficients are sharper still -- even l,
+sine only.  See `tests/test_p14_sampling_aliasing.py` and PLAN.md P14, which
+also record what that run revealed about the noise floor itself.
 """
 
 import re

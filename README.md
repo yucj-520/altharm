@@ -87,6 +87,7 @@ Measured on Cr2SeAs, at $l=3$:
 | **PAW vs ultrasoft pseudopotential** | **9.7%** (17.8% at $l$=45) | no |
 | **PBEsol vs PBE** | **7.3%** (33.2% at $l$=39) | no |
 | atomic positions at relaxation precision (1e-3 A) | <4% on the coefficients | partly -- it degrades the floor 7x |
+| **the number of points on the circle** | **18% (36% worst)** | **no -- it reports _zero_** |
 | **the floor's own number** | **0.04%** (24 μeV / 64 meV) | -- |
 
 The last two are the sharpest case, because they move the floor the **wrong way**: switching
@@ -96,6 +97,18 @@ $l_\mathrm{max}$, not the error. A run can look cleaner and be more wrong.
 
 They also attack the tail specifically rather than rescaling: $l=3$ moves 0.4-1.3% while
 $l=39$ moves 12-33%.
+
+**The sample count is a different kind of entry and the worst one.** The others are blind
+spots; this one is an inversion. The floor is read off harmonics that symmetry forbids, but
+*which* operation forbids a harmonic decides what its amplitude means: on the 152-point circle
+the 67 coefficients forbidden by an operation the sample grid can represent sit at 0.0040 μeV,
+while the 15 forbidden only by C3 -- the one operation 152 points cannot represent -- sit at
+24.70 μeV and **are** the published floor. Choose $N$ a multiple of the allowed set's period and
+every operation becomes representable: the floor drops to zero while the unresolved tail folds
+straight onto the reported coefficients, ~18% median error. Across $N=120\ldots199$ the floor
+is *monotonically anti-correlated* with the true error. Use $N$ coprime to that period --
+`altharm.sampling.sampling_report` will say which; this project's own 152 shares a factor and is
+~5x worse than a coprime count at the same cost. See `PLAN.md` P14.
 
 Every one of those is an *input* to the Kohn-Sham Hamiltonian, and the floor
 measures what happens after the Hamiltonian is fixed. So the honest summary of
