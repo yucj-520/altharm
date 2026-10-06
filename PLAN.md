@@ -1580,3 +1580,67 @@ summing files already on disk is close to free. **Several days of DFPT was sitti
 step short of an answer for two weeks.**
 
 Fixture: `tests/data/hp_u/AB.Hubbard_parameters.dat`. Tests: `tests/test_p19_linear_response_u.py`.
+
+---
+
+## P19b — what the linear-response $U$ does to the numbers, measured
+
+P19 left the magnitude open: 6.39 eV lies outside the 2–5 eV range P12 scanned, so the shift
+could not be stated without extrapolating. Job 20796793 closes that — identical to P12's
+`u2`/`u4`/`u5` in every respect (12×12×4, degauss 0.0150, `ecutwfc` 60, 152-point circle,
+band 44), with $U = 6.3858$ (CrU) / $6.3880$ (CrD) from P19.
+
+| $l$ | $U$=2 | $U$=3 | $U$=4 | $U$=5 | **$U$=6.39** | 3 → 6.39 |
+|---|---|---|---|---|---|---|
+| 3 | 69.152 | 63.746 | 54.660 | 44.260 | **31.403** | **−50.7%** |
+| 9 | 45.094 | 42.921 | 36.080 | 28.892 | **20.671** | −51.8% |
+| 15 | 0.000 | 3.533 | 5.358 | 5.940 | 5.526 | +56.4% |
+| 21 | 9.550 | 8.644 | 6.889 | 5.141 | 3.132 | −63.8% |
+| 27 | 1.098 | 1.837 | 1.984 | 1.762 | 1.203 | −34.5% |
+| 33 | 2.962 | 2.614 | 2.069 | 1.457 | 0.697 | −73.3% |
+| 39 | 1.244 | 1.168 | 0.889 | 0.602 | 0.258 | −77.9% |
+| 45 | 1.235 | 1.003 | 0.761 | 0.482 | **0.156** | **−84.5%** |
+| floor | 81.8 μeV | 24.3 | 6.5 | 1.3 | **1.30 μeV** | |
+
+(meV unless marked. $l=15$ is the exception P12 already flagged: it sits near a zero crossing,
+so its percentage is about that crossing rather than a sensitivity.)
+
+**Median shift from the production $U$ to the linear-response one: −57.8%.** The leading
+harmonic is halved; the weakest is down by a factor of six.
+
+### The conclusion that matters: the ratios survive, the absolute values do not
+
+| $U$ | next/leading ($l$=9 / $l$=3) | $l=3$ (meV) |
+|---|---|---|
+| 2 | 65.2% | 69.152 |
+| 3 | 67.3% | 63.746 |
+| 4 | 66.0% | 54.660 |
+| 5 | 65.3% | 44.260 |
+| **6.39** | **65.8%** | **31.403** |
+
+**The next/leading ratio moves 1.5 percentage points across a range where the leading harmonic
+changes by 55%.** So this project's headline result -- that the high-harmonic physics lives in
+Cr2SeAs (67.6%) and not in the canonical altermagnets (MnTe 5.6%, CoF2 0.021%), P8 -- **is
+untouched by the $U$ uncertainty.** All eight allowed harmonics also stay resolved over the
+whole range.
+
+What does *not* survive is any statement quoting an absolute amplitude in meV. Those depend on
+$U$ at the factor-of-two level, and the right value of $U$ is not settled.
+
+### Where this leaves the project
+
+$U$ was already the largest measured uncertainty (P12: 21% per eV). P19b makes it larger than
+that framing suggested, because the question is no longer sensitivity but which value is
+correct. Two readings are consistent with everything measured:
+
+1. **The linear-response $U$ is right**, and every absolute coefficient published from this
+   project is roughly a factor of two too large.
+2. **$U=3$ is defensible on other grounds** (agreement with experiment elsewhere, the coarse
+   2×2×1 q-mesh and loosened `conv_thr_chi` behind the 6.39), and the discrepancy is a known
+   limitation of DFPT $U$ for this system.
+
+Nothing here decides between them -- that needs a comparison against something external, which
+this project does not have. **What it does establish is that the choice does not threaten the
+conclusions, only the numbers.**
+
+Fixture: `tests/data/qe_cr2seas_u64/`. Tests: `tests/test_p19b_u_extended.py`.
