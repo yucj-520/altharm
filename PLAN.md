@@ -974,11 +974,13 @@ absolute difference over all 91 coefficients **1e-14 eV**, normal detected as $(
 0.0550574 = $a/4c$ as it should be, and exactly four new lines in the report. Pinned in
 `tests/test_p9_arbitrary_plane.py`.
 
-**What that does not show:** v2 reproduces v1 *where v1 was valid*. No circle with a non-$+\hat
-z$ normal has been run, so v2's correctness for a general plane is untested. Closing it needs a
-bands run on e.g. a $k_y k_z$ circle with the allowed set compared against
-`altharm.symmetry`'s prediction for that plane -- the same cross-check that caught v1's
-time-reversal bug.
+**What that did not show, and how it was closed.** v2 reproduces v1 *where v1 was valid*, which
+left its correctness on a general plane untested. **That gap is now closed** (job 20383535, run
+2026-09-22, analysed 2026-10-01): a great circle in the $k_y k_z$ plane, normal $(1,0,0)$,
+offset 0, frame $(e_1,e_2) = (\hat y, \hat z)$, 4 of 12 operations kept. Its allowed set is
+$l = 2,4,\dots,24$, matching `altharm.symmetry`'s independent prediction for that plane, and
+the coefficients are sharper still -- even $l$, sine only, with odd $l$ at 1e-14 eV. See P14.1,
+which also records what that run revealed about the noise floor itself.
 
 **Scope of v2, honestly still not general:** collinear LSDA only; band identity is given
 explicitly rather than tracked (`altharm.bandtrack`'s continuity tracking is not yet ported to
@@ -1281,3 +1283,166 @@ Two consequences:
 
 **Corollary for P8:** CoF2's numbers stand, but its sample count was lucky rather than chosen.
 Confirming them would want a rerun at $N$ coprime to 4.
+
+---
+
+## P15 — the k_z = 0 residual is a rigid offset, not an angular error
+
+**Open since P8.** MnTe's $k_z = 0$ plane is nodal: symmetry forbids *every* $l$ there, so the
+whole measured splitting is residual. It was 19 μeV at $U=0$ and 0.20 μeV at $U=4$, and the note
+recorded only that this is "not a fixed floor". What it actually is, measured 2026-10-06 on the
+existing `mnte_kz0` / `mnte_kz0_u4` fixtures (band 20, 152-point circle, allowed set empty in
+both, as `altharm.symmetry` confirms):
+
+| $U$ | total rms | $l=0$ rigid part | angular part | gap (band 20→21) |
+|---|---|---|---|---|
+| 0 | 19.252 μeV | **19.245 μeV** | 0.500 μeV | 759 meV |
+| 4 | 0.197 μeV | **0.197 μeV** | 0.009 μeV | 1813 meV |
+
+**99.96% of it is a rigid, angle-independent shift between the two spin channels.** The angular
+content -- the part that would actually corrupt a harmonic -- is 0.5 μeV at $U=0$ and 9 neV at
+$U=4$. So the number that looked alarming was never a harmonic error at all: a constant in
+$\theta$ is $l = 0$, and $l = 0$ is not among the coefficients anyone reports.
+
+Decomposed by P14's channels, it sits **entirely in $\chi = -1$**:
+
+| $U$ | $\chi=+1$ residual | $\chi=-1$ residual | ratio |
+|---|---|---|---|
+| 0 | 1.5e-11 eV | 1.0e-06 eV | 65000 |
+| 4 | 5.8e-12 eV | 1.7e-08 eV | 3000 |
+
+(The $\chi=+1$ figures are small but *not* machine zero -- quoting them as 0 would overstate
+the case by five orders.)
+
+which is the same split P14.2 found on Cr2SeAs: constraints relating $\varepsilon_\uparrow$ to
+itself are exact, constraints relating it to $\varepsilon_\downarrow$ hold only as well as the
+self-consistent density respects sublattice exchange. That is why it is $U$-dependent and not a
+floor -- opening the gap by 2.4x improves it by 98x.
+
+**Consequence.** A nodal plane is a *good* diagnostic of SCF quality, but its residual must be
+reported with $l=0$ removed, or it overstates the angular error by a factor of 40 (U=0) to 22
+(U=4). The same applies to the $l=0$ offset P14.2 found on the y-z circle (4.74 μeV of a
+4.86 μeV total).
+
+Tests: `tests/test_p15_kz0_residual.py`.
+
+---
+
+## P16 — what the floor does as N grows: neither $1/N_k$ nor a generic noise plateau
+
+**Open since P3** ("whether it saturates at a genuine noise level is not yet measured -- it
+would take a third k-density"). The third density was never needed: P14 says the floor *is* the
+unresolved tail folded down, so it can be predicted from an independent measurement of that
+tail. The 56-, 152- and 304-point circles share one density (60 Ry, degauss 0.0037), and the
+304-point fit resolves $l$ up to 151, which is the tail the other two are folding.
+
+Reading the floor only from the channels aliasing actually feeds -- $l'$ forbidden, $N-l'$
+allowed -- as P14.3 requires:
+
+| $N$ | channels | measured floor | predicted from the 304-point tail | ratio |
+|---|---|---|---|---|
+| 56 | 3 | 1050.4 μeV | 986.2 μeV | **1.065** |
+| 152 | 7 | 54.67 μeV | 53.84 μeV | **1.015** |
+
+Two independent confirmations across a 19x range in the floor, on real eigenvalues, with no
+fitted parameter.
+
+**So the floor does not follow a power of $N$ at all.** It follows the *tail's own decay*, which
+is a property of the material's harmonic ladder -- fast for a nearly single-wave altermagnet,
+slow for a multi-harmonic one. Quoting a $1/N_k$ law would be fitting the wrong thing.
+
+**Where it stops.** The tail cannot be followed below the point where the $\chi = -1$
+constraints stop being exact, because those are what make a forbidden harmonic forbidden in the
+first place. On this density that error is **0.766 μeV** (and $\chi = +1$ is 0.072 μeV). The
+304-point floor is 1.865 μeV, i.e. **2.4x above it** -- so Cr2SeAs at 304 points is approaching
+the crossover but has not reached it, and a further increase in $N$ can buy at most about a
+factor of two before the floor stops responding.
+
+**The saturation value is therefore not a universal numerical noise level.** It is the
+self-consistency quality of that particular density for that particular material, which is why
+P15 finds the same quantity controlling MnTe's nodal-plane residual and why opening a gap
+improves it.
+
+Tests: `tests/test_p16_floor_scaling.py`.
+
+---
+
+## P17 — the Bessel suppression, on a synthetic `hr.dat` where the answer is known
+
+**Open since P10**, which asked for it in so many words: "build a *synthetic* `hr.dat`
+containing a known harmonic at a controlled radius, truncate it at a series of
+$R_\mathrm{max}$ values, and confirm the measured damping matches the $J_l(k_0 R_\mathrm{max})$
+prediction rather than some other falloff."
+
+The argument is Jacobi-Anger. A hopping at in-plane displacement $R$, angle $\phi$, contributes
+$e^{i k_0 R\cos(\theta-\phi)}$ to $H(\mathbf k)$ on a circle of radius $k_0$, whose $l$-th
+Fourier coefficient is $i^l J_l(k_0 R)e^{-il\phi}$. So for a **linear** quantity -- a matrix
+element, a trace -- the $l$-th harmonic from a shell at radius $R$ is exactly proportional to
+$J_l(k_0 R)$.
+
+**Measured, single shell** (square lattice $a = 3$ Å, one orbital, hoppings on one shell with
+angular pattern $\cos l\phi$, $k_0 = 0.9$ Å$^{-1}$): the ratio of the measured harmonic to
+$J_l(k_0 R)$ is constant across ten shells to **4e-15**, for each of $l = 2, 4, 6, 8$. That is
+not a falloff resembling a Bessel function; it *is* the Bessel function, zeros and sign changes
+included.
+
+**A lattice artifact had to be excluded first, and it nearly read as a 5% failure of the law.**
+A shell whose radius is a Pythagorean hypotenuse is not one angular orbit: $|R| = 5$ holds 12
+sites in 3 distinct orbits ($(5,0)$, $(3,4)$, $(4,3)$), so $\cos l\phi$ on it does not excite a
+single $l$. Those shells deviate; every other shell is exact.
+
+**Measured, truncation.** For a model with many shells the harmonic is a sum over everything
+retained, so it does **not** track $J_l(k_0 R_\mathrm{max})$ as a smooth envelope -- the ratio
+wanders over a factor of 70. What survives is the **threshold**: $J_l(x)$ is negligible for
+$x \ll l$, so a model truncated below $R \sim l/k_0$ cannot represent harmonic $l$ at all. At
+half that radius the harmonic is suppressed by $10^3$ to $10^5$ relative to the converged value,
+and the suppression is of the *order* of $J_l(k_0 R_\mathrm{max})$, within about a decade.
+
+So the honest form of the claim is a threshold, not an envelope -- consistent with P10's own
+note that the falloff "is not monotonic, it overshoots before settling", and with why a 4-7 Å
+model gets $l = 21$ wrong by a factor of six while a 15 Å one does not.
+
+Tests: `tests/test_p17_bessel_synthetic.py`.
+
+---
+
+## P18 — the Taylor-vs-Fourier check cannot be done at the circle's centre, and why
+
+P7 proposed a second, internal cross-check on the fit: "a Taylor expansion in $\mathbf k$
+against the Fourier coefficients recovered from a sampled circle, at a point where both should
+agree." It was never run, and the reason it cannot be run as stated is worth recording.
+
+The check's content does not need defumat. If $\Delta E(\mathbf k)$ were analytic at the
+circle's centre, the lowest-degree polynomial in $(k_x, k_y)$ producing $\cos l\theta$ would be
+degree $l$, so
+
+$$a_l \propto k_0^{\,l} \quad\text{as } k_0 \to 0,$$
+
+a parameter-free prediction testable at any radius with the Wannier model (`v03`, 38 Wannier
+functions, 583 $R$-vectors). **Measured 2026-10-06**, circles of radius 0.003–0.034 Å$^{-1}$ at
+$k_z = 0.25 b_3$:
+
+| band | $l$ | fitted exponent | Taylor predicts | $R^2$ |
+|---|---|---|---|---|
+| 20 | 3 | 1.42 | 3 | 0.995 |
+| 21 | 3 | **1.33** | 3 | 0.996 |
+| 22 | 3 | 1.11 | 3 | 0.993 |
+| 21 | 9 | −0.22 | 9 | **0.27** |
+
+$l=3$ scales roughly **linearly**, not cubically; $l=9$ does not follow a power law at all.
+
+**The reason is a degeneracy at the centre, and it is a symmetry fact rather than an accident.**
+At $k_x = k_y = 0$ the point sits on the $\Gamma$--A line, whose little group has two-dimensional
+irreps, so bands come in degenerate pairs: measured gaps of **0.005, 0.009 and 0.010 meV** for
+bands 19/20, 21/22 and 24/25. $\Delta E$ is therefore non-analytic there -- a square-root
+singularity, not a Taylor series -- and an exponent near 1 is that singularity's fingerprint.
+
+**This corroborates P10 from the opposite direction.** P10 concluded that the high harmonics are
+generated by the non-linearity of the eigenvalue problem (level repulsion at avoided crossings)
+rather than by hopping range. P18 shows the same non-analyticity defeats the Taylor expansion:
+the two statements are the same fact seen from either side. A Taylor-based check would have to
+be centred somewhere the bands are non-degenerate, which is not where this project's circles
+are, and where it would no longer test the harmonics of interest.
+
+Tests: `tests/test_p18_taylor_vs_fourier.py` (skipped when the v03 `hr.dat` is absent; it lives
+outside the repo at `HIGH_THROUGHT_WANNIERcr2X3/1.cr2se2as/Cr2SeAs_wannier_v03/`).
