@@ -1446,3 +1446,71 @@ are, and where it would no longer test the harmonics of interest.
 
 Tests: `tests/test_p18_taylor_vs_fourier.py` (skipped when the v03 `hr.dat` is absent; it lives
 outside the repo at `HIGH_THROUGHT_WANNIERcr2X3/1.cr2se2as/Cr2SeAs_wannier_v03/`).
+
+---
+
+## P14.8 — the $m=1$ regime, measured on real DFT
+
+P14 established the rule synthetically and measured the *mechanism* on real eigenvalues
+(P14.6), but the catastrophic case itself -- floor reading zero while the coefficients absorb
+the tail -- had only a model behind it. Job 20794763: the same `sm24` density (24×24×8,
+degauss 0.0150, $U = 3$), **only the sample count changed**.
+
+### $k_x k_y$ plane, allowed set $l \equiv 3 \pmod 6$, $p = 6$
+
+| $N$ | $\gcd$ | $m$ | reported floor | coefficient shift vs $N=152$ (median / max) |
+|---|---|---|---|---|
+| **150** | 6 | **1** | **0.0032 μeV** | **2.18% / 10.00%** |
+| 153 | 3 | 2 | 32.47 μeV | 0.06% / 0.22% |
+| **151** | 1 | **6** | **45.66 μeV** | **0.01% / 0.02%** |
+| 152 | 2 | 3 | 24.70 μeV | (reference) |
+
+**Anti-correlated and monotone, three points, on real data.** As $m$ rises the error falls
+(2.18 → 0.06 → 0.01%) while the reported floor rises (0.003 → 32.5 → 45.7 μeV).
+
+$N = 153$ is what makes this an ordering rather than two extremes: it lands squarely between on
+both axes.
+
+**$N = 150$ has no aliasing-fed forbidden channel at all.** $150 \equiv 0 \pmod 6$, so
+"$l'$ forbidden and $150 - l'$ allowed" has no solution -- the tail lands *entirely* on allowed
+harmonics. The floor there had to be read from the unfed channels. That is the definition of
+$m = 1$, not a statistical accident.
+
+**Control:** $N = 151$ and $N = 152$ are two different counts, neither at $m=1$, and they agree
+to **0.02%**. So the $N=150$ shift is caused by $m=1$, not by changing $N$.
+
+### $k_y k_z$ plane, allowed set every even $l$, $p = 2$ -- a second period
+
+The existing 152-point y-z circle is even, so $\gcd(152,2) = 2$ and $m = 1$; 151 is odd, giving
+$m = 2$, the maximum available at $p = 2$.
+
+| | forbidden odd-$l$ channels | $l = 8$ coefficient |
+|---|---|---|
+| 152 points ($m=1$) | **0.0000 μeV** | 0.0529 meV |
+| 151 points ($m=2$) | **60.1 μeV** | **0.0930 meV** |
+
+The 152-point run reported a **perfect zero** in every odd channel while its weakest harmonic
+was **43% off** -- nearly a factor of two. Median shift over the twelve allowed $l$: 1.44%.
+
+### The honest correction to P14.4
+
+The synthetic model predicted a median error of **18%** at $m=1$; the measurement is **2.18%**
+on the $k_xk_y$ circle and 1.44% on the y-z one. Mechanism and direction confirmed, **magnitude
+an order of magnitude smaller**, because Cr2SeAs's real tail above $l = 45$ decays faster than
+the synthetic tail assumed. Quote the measured numbers, not the model's.
+
+### What this cost, and the two guards it bought
+
+The first attempt (20794209) failed twice over. `harmwave.x` was launched bare inside the
+allocation and hit an Open MPI PMI error -- the module stack changed after 2026-10-02, so a
+script that worked in September no longer does. And the input generator took everything *before*
+`K_POINTS`, but `sm24/bands.in` carries its HUBBARD card at line 207, **after** the k-point
+list, so all four tasks silently ran plain PBE. `grep -ci hubbard` gave 0 against sm24's 8, and
+nothing errored.
+
+The tell was that all three $N$ agreed with each other to 1e-6 while all disagreeing with the
+reference: three different sample counts cannot do that unless the difference is systematic
+rather than an $N$ effect. The job script now checks the HUBBARD card is present, that Hubbard
+is active in `bands.out`, and launches every MPI binary through `srun`.
+
+Tests: `tests/test_p14_sampling_aliasing.py` (the nsweep block).

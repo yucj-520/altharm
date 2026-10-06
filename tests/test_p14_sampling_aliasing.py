@@ -517,3 +517,133 @@ def test_the_rule_holds_for_every_allowed_set_period():
         assert e_bad > 10.0, (p, e_bad)          # yet the answer is wrong
         assert e_good < e_bad, (p, e_good, e_bad)
         assert f_good > f_bad, (p, f_good)       # the honest grid looks worse
+
+
+# --------------------------------------------------------------------------
+# P14.8: the m = 1 regime, measured on real DFT (job 20794763)
+# --------------------------------------------------------------------------
+#
+# Everything above establishes the rule synthetically and the mechanism on real
+# eigenvalues.  This block is the catastrophic case itself, measured: the same
+# sm24 density (24x24x8, degauss 0.0150, U = 3), only the sample count changed.
+#
+#   k_x k_y, allowed l = 3 (mod 6), p = 6:
+#
+#     N     gcd   m    reported floor   shift vs N=152 (median/max)
+#    150     6    1      0.0032 ueV        2.18% / 10.00%
+#    153     3    2     32.47   ueV        0.06% /  0.22%
+#    151     1    6     45.66   ueV        0.01% /  0.02%
+#    152     2    3     24.70   ueV        (reference)
+#
+# Anti-correlated and monotone across three points.  N = 153 is what makes it
+# an ordering rather than two extremes.
+#
+# N = 150 has NO aliasing-fed forbidden channel at all: 150 = 0 (mod 6), so
+# "l' forbidden and 150 - l' allowed" has no solution and the tail lands
+# entirely on allowed harmonics.  That is the definition of m = 1.
+#
+#   k_y k_z, allowed set every even l, p = 2 -- a second period:
+#
+#                        forbidden odd-l      l = 8 coefficient
+#     152 points (m=1)     0.0000 ueV           0.0529 meV
+#     151 points (m=2)    60.1    ueV           0.0930 meV
+#
+# The 152-point run reported a perfect zero in every odd channel while its
+# weakest harmonic was 43% off.
+#
+# The synthetic model predicted 18% median at m=1; the measurement is 2.18%.
+# Mechanism confirmed, magnitude an order of magnitude smaller, because
+# Cr2SeAs's real tail above l = 45 decays faster than the model assumed.
+
+NSWEEP = DATA / "nsweep"
+REF_152 = {3: 64.293, 9: 43.447, 15: 3.603, 21: 8.662,
+           27: 1.876, 33: 2.583, 39: 1.182, 45: 0.985}       # meV, sm24
+
+nsweep_missing = not all((NSWEEP / f"harmwave_{t}.txt").exists()
+                         for t in ("N150", "N151", "N153", "YZ151"))
+
+
+def _cf(name):
+    out = {}
+    for line in (NSWEEP / f"harmwave_{name}.txt").read_text().splitlines():
+        t = line.split()
+        if line.startswith("CF "):
+            out[(int(t[1]), t[2])] = float(t[3])
+    return out
+
+
+def _floor_and_shift(name, n):
+    cf = _cf(name)
+    fed = [abs(cf[(lp, "s")]) for lp in range(1, 46)
+           if lp % 6 != 3 and (n - lp) % 6 == 3 and n - lp >= 1]
+    unfed = [abs(v) for (l, k), v in cf.items()
+             if not (l % 6 == 3 and k == "s")
+             and not (k == "s" and (n - l) % 6 == 3 and n - l >= 1)]
+    floor = float(np.median(fed)) if fed else float(np.median(unfed))
+    shift = np.abs([100 * (abs(cf[(l, "s")]) * 1e3 - REF_152[l]) / REF_152[l]
+                    for l in REF_152])
+    return floor, float(np.median(shift)), float(shift.max())
+
+
+@pytest.mark.skipif(nsweep_missing, reason="the nsweep fixtures are not present")
+def test_n150_has_no_aliasing_fed_forbidden_channel():
+    """Not a small number -- an empty set.  That is what m = 1 means."""
+    fed = [lp for lp in range(1, 46)
+           if lp % 6 != 3 and (150 - lp) % 6 == 3 and 150 - lp >= 1]
+    assert fed == []
+    assert alias_order(150, 6) == 1
+
+
+@pytest.mark.skipif(nsweep_missing, reason="the nsweep fixtures are not present")
+def test_floor_and_error_are_anticorrelated_and_monotone_on_real_data():
+    rows = [(alias_order(n, 6),) + _floor_and_shift(name, n)
+            for n, name in ((150, "N150"), (153, "N153"), (151, "N151"))]
+    rows.sort()                                   # by alias order 1, 2, 6
+    orders = [r[0] for r in rows]
+    floors = [r[1] for r in rows]
+    errors = [r[2] for r in rows]
+    assert orders == [1, 2, 6]
+    assert floors == sorted(floors), floors       # floor RISES with m
+    assert errors == sorted(errors, reverse=True), errors   # error FALLS
+    assert floors[-1] / floors[0] > 1000.0
+    assert errors[0] / errors[-1] > 50.0
+
+
+@pytest.mark.skipif(nsweep_missing, reason="the nsweep fixtures are not present")
+def test_the_two_counts_that_are_not_m_one_agree_with_each_other():
+    """The control: N=151 vs the N=152 reference, both away from m=1."""
+    _, median, worst = _floor_and_shift("N151", 151)
+    assert median < 0.05, median
+    assert worst < 0.1, worst
+
+
+@pytest.mark.skipif(nsweep_missing, reason="the nsweep fixtures are not present")
+def test_the_measured_magnitude_is_smaller_than_the_synthetic_model():
+    """Report the measurement, not the model: 2.18%, not 18%."""
+    _, median, _ = _floor_and_shift("N150", 150)
+    assert 1.0 < median < 5.0, median
+
+
+@pytest.mark.skipif(nsweep_missing, reason="the nsweep fixtures are not present")
+def test_the_yz_plane_repeats_it_at_a_different_period():
+    """p = 2 there, so 152 (even) is m=1 and 151 (odd) is m=2."""
+    assert allowed_period(range(2, 25, 2)) == 2
+    assert alias_order(152, 2) == 1 and alias_order(151, 2) == 2
+
+    new = _cf("YZ151")
+    old = {}
+    for line in (DATA / "harmwave_yz" / "harmwave_yz.txt").read_text().splitlines():
+        t = line.split()
+        if line.startswith("CF "):
+            old[(int(t[1]), t[2])] = float(t[3])
+
+    odd_old = max(abs(old[(l, k)]) for l in range(1, 25, 2) for k in "cs")
+    odd_new = max(abs(new[(l, k)]) for l in range(1, 25, 2) for k in "cs")
+    assert odd_old < 1e-12, odd_old            # a perfect zero at m = 1
+    assert odd_new > 1e-5, odd_new             # 60 ueV at m = 2
+
+    # and the weakest harmonic is the one that moves most
+    shift = {l: abs(abs(old[(l, "s")]) - abs(new[(l, "s")])) / abs(new[(l, "s")])
+             for l in range(2, 25, 2)}
+    assert shift[8] > 0.3, shift[8]            # 43%
+    assert float(np.median(list(shift.values()))) < 0.05
