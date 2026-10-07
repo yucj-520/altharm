@@ -1693,3 +1693,72 @@ substantially smaller absolute values. P19 and P19b exist so that sentence can b
 without hand-waving.
 
 Fixture: `tests/data/qe_cr2seas_u64/`. Tests: `tests/test_p19b_u_extended.py`.
+
+---
+
+## P20 — the 3D spherical route, on a real material for the first time
+
+**Open since P2.** `SphericalBasis` and the spherical projector had unit tests and nothing else:
+no DFT run had ever put a sphere of k-points through them. Job 20814237 does — 288 points
+(12 × 24 Gauss-Legendre × uniform) on a sphere of radius 0.293879 tpiba, chosen to pass through
+the existing 152-point circle so the two routes can be compared directly. Same `sm24` density.
+
+### What it settles: the allowed set, and the $l=3$ / $l=4$ question
+
+The symmetry projector's prediction, made without touching the data: **allowed $l = 4, 6, 8, 10$**.
+Measured, band 44:
+
+| $l$ | allowed? | largest $|$coefficient$|$ |
+|---|---|---|
+| 1, 3, 5, 7, 9 | no | **0.00000 meV** |
+| 2 | no | 0.00090 meV |
+| 4 | yes | 34.17 meV |
+| 6 | yes | 28.53 meV |
+| 8 | yes | 98.42 meV |
+| 10 | yes | 23.62 meV |
+
+Signal-to-forbidden ratio **110 000**. The first allowed $l$ is **4**.
+
+**This resolves a real and recurring confusion.** "g-wave means $l=4$" and this project's own
+"MnTe is g-wave with leading order $l=3$" are both correct, in different bases. Expanding the
+g-wave form $\Delta E \propto k_z k_\perp^3 \cos 3\phi$ in real spherical harmonics gives
+**exactly one term, $Y_4^3$** -- the other 48 coefficients below $10^{-6}$, relative residual
+$6.2\times10^{-17}$. So:
+
+- **spherical $l = 4$** -- which is the "g" of g-wave (s/p/d/f/g = 0/1/2/3/4), and what the
+  nodal-surface count is really counting ($Y_4^3$ has three vertical nodes from $\cos3\phi$ plus
+  one horizontal from $\cos\theta$);
+- **circular $l = 3$** -- the azimuthal index left after $k_z$ is fixed.
+
+Reading a circular result against "g-wave = $l$=4" judges a correct answer wrong. The 3D route
+makes the correspondence explicit, which is something the 2D route cannot do. **That, rather
+than being one more cross-check, is what this route is for.**
+
+### What it does NOT settle: the amplitudes
+
+The fit leaves a **10.2% relative residual** at $l_\mathrm{max}=10$, and $l=8$ comes out larger
+than $l=4$, which is the signature of aliasing rather than of physics. Predicting the measured
+circle from the spherical fit confirms it:
+
+| $l_\mathrm{max}$ | spherical residual | predicted circle vs measured |
+|---|---|---|
+| 4 | 22.2% | 111.6% |
+| 6 | 21.6% | 98.5% |
+| 8 | 11.4% | 60.9% |
+| 10 | 10.2% | **43.1%** |
+
+Monotone but nowhere near converged. The cause is the grid, not the method: 12 × 24
+Gauss-Legendre is exact only for $l < 12$, while Cr2Se2As carries a resolved ladder out to
+$l = 45$ on the circle. Everything above $l=10$ folds into the coefficients below it -- P14's
+aliasing, in three dimensions.
+
+**So this run establishes the allowed set and the $l=3$ ↔ $l=4$ correspondence, and its
+amplitudes must not be quoted.**
+
+**What closing that would take, quantified.** Matching the circle's $l_\mathrm{max}=45$ needs
+$n_\theta > 45$ and $n_\phi > 90$, i.e. about 46 × 92 = 4232 points. At this run's rate (288
+points in 80 minutes) that is roughly **20 hours** -- inside a two-day walltime, but 14× the
+cost, and worth doing only if the 3D amplitudes are wanted for their own sake rather than for
+the symmetry statement, which is already settled.
+
+Fixture: `tests/data/sphere/`. Tests: `tests/test_p20_spherical_route.py`.
