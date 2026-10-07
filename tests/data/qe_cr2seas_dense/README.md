@@ -1,4 +1,4 @@
-# Real pw.x output, Cr2SeAs PBE+U, dense 152-point circle
+# Real pw.x output, Cr2Se2As PBE+U, dense 152-point circle
 
 Same run as `tests/data/qe_cr2seas_p3/` (same scf, same converged density,
 same structure, same k_z = 0.25 b3), but a `bands` step re-run on a

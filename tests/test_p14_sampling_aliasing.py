@@ -11,7 +11,7 @@ The number of sample points on the circle sets the floor and the error at the
 same time, and sets them in opposite directions.
 
 **The mechanism**, confirmed here two independent ways.  A material's splitting
-contains only allowed harmonics, at every order; on Cr2SeAs the allowed set is
+contains only allowed harmonics, at every order; on Cr2Se2As the allowed set is
 ``l = 3 (mod 6)``, a lattice of period ``p = 6``.  Everything above ``lmax`` is
 unresolved and aliases onto ``l' = |l - m n|``.  That ``l'`` is allowed exactly
 when ``m n = 0 (mod p)``, so the tail first touches the signal at alias order
@@ -19,7 +19,7 @@ when ``m n = 0 (mod p)``, so the tail first touches the signal at alias order
 every unresolved harmonic is added directly to a reported coefficient, and no
 forbidden channel receives anything at all.
 
-**Measured on the real Cr2SeAs run** (24x24x8, degauss 0.0150, 152 points,
+**Measured on the real Cr2Se2As run** (24x24x8, degauss 0.0150, 152 points,
 band 44), splitting the 90 coefficients by what forbids each one:
 
 ================================================  ===  ===========  ==========
@@ -61,7 +61,7 @@ prediction is that n = 150 reports a floor near 0.004 ueV and shifts the
 coefficients by order 10% -- is prepared in ``altharm_runs/nsweep`` and has not
 been run.  Until it has, the first table is an observation about the 152-point
 run and the second is a statement about a model, and neither is a measurement
-of what n = 150 does to Cr2SeAs.
+of what n = 150 does to Cr2Se2As.
 """
 
 import functools
@@ -327,7 +327,7 @@ def test_on_the_yz_circle_every_operation_is_representable():
 # On a 152-point grid, sin(l*theta_j) with l = 152 - l' folds to -sin(l'*theta_j),
 # so the prediction is signed: b_{l'} = -b_{152-l'}.
 #
-# Measured (Cr2SeAs, band 44, degauss 0.0037 -- the k304 fixture's own density):
+# Measured (Cr2Se2As, band 44, degauss 0.0037 -- the k304 fixture's own density):
 #
 #   l'    from    b_l' at N=152    -b_(152-l') at N=304    residual
 #    5     147      -33.755 ueV          -32.617 ueV        -3.49%
@@ -416,7 +416,7 @@ def test_allowed_coefficients_survive_the_subsampling():
 #   material       N    p   gcd   m    floor        next/leading
 #   MnTe  U=4     152   6    2    3    0.0234 ueV      5.630%
 #   CoF2  U=0     152   4    4    1    0.0369 ueV      0.021%
-#   Cr2SeAs U=3   304   6    2    3    1.0082 ueV     65.601%
+#   Cr2Se2As U=3   304   6    2    3    1.0082 ueV     65.601%
 #
 # CoF2's allowed set is l = 2, 6, 10, 14 -- period 4 -- and 152 is divisible by
 # 4, so **the published P8 CoF2 runs are in the m=1 regime**.  That went
@@ -426,7 +426,7 @@ def test_allowed_coefficients_survive_the_subsampling():
 #
 # So the failure mode is not uniform across materials.  It is worst exactly
 # where the harmonic ladder is slow to decay -- which is to say on the
-# multi-harmonic materials this project exists to study.  Cr2SeAs, whose second
+# multi-harmonic materials this project exists to study.  Cr2Se2As, whose second
 # harmonic is 66% of its first, is the one that would be destroyed by m=1;
 # CoF2 and MnTe are nearly immune whatever N is chosen.
 #
@@ -452,7 +452,7 @@ def test_damage_at_first_order_is_bounded_by_the_tail():
 
     Synthetic, with the tail amplitude scanned: at m=1 every unresolved
     harmonic lands on the signal, so the error tracks the tail's size and
-    vanishes with it.  This is why CoF2 survived m=1 and why Cr2SeAs would
+    vanishes with it.  This is why CoF2 survived m=1 and why Cr2Se2As would
     not have.
     """
     def err_at(n, tail_scale):
@@ -477,7 +477,7 @@ def test_the_rule_holds_for_every_allowed_set_period():
     """It is arithmetic about the period, not a fact about three materials.
 
     The allowed set of a circle is ``l = off (mod p)``; p is 2 for the y-z
-    circle here, 4 for CoF2, 6 for MnTe and Cr2SeAs.  Nothing in the derivation
+    circle here, 4 for CoF2, 6 for MnTe and Cr2Se2As.  Nothing in the derivation
     cares which, so the rule is checked against periods this project has no
     material for -- including odd and prime ones, where the coprime counts are
     much denser.  All nine behave the same way: a multiple of p puts the floor
@@ -553,7 +553,7 @@ def test_the_rule_holds_for_every_allowed_set_period():
 #
 # The synthetic model predicted 18% median at m=1; the measurement is 2.18%.
 # Mechanism confirmed, magnitude an order of magnitude smaller, because
-# Cr2SeAs's real tail above l = 45 decays faster than the model assumed.
+# Cr2Se2As's real tail above l = 45 decays faster than the model assumed.
 
 NSWEEP = DATA / "nsweep"
 REF_152 = {3: 64.293, 9: 43.447, 15: 3.603, 21: 8.662,

@@ -1,4 +1,4 @@
-# Real pw.x output, Cr2SeAs, same run with the vdW correction removed
+# Real pw.x output, Cr2Se2As, same run with the vdW correction removed
 
 Identical to `qe_cr2seas_dense/` except `vdw_corr = 'grimme-d3'` is absent.
 Every eigenvalue is bit-identical, which is the evidence that Grimme's

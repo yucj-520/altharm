@@ -30,7 +30,7 @@ zero crossing.)
 
 The next/leading ratio moves 1.5 percentage points across a range where the
 leading harmonic changes by 55%.  So P8's headline -- that the high-harmonic
-physics is in Cr2SeAs (67.6%) and not in the canonical altermagnets (MnTe 5.6%,
+physics is in Cr2Se2As (67.6%) and not in the canonical altermagnets (MnTe 5.6%,
 CoF2 0.021%) -- is untouched by the U uncertainty, and all eight allowed
 harmonics stay resolved throughout.  What does not survive is any statement
 quoting an absolute amplitude in meV.

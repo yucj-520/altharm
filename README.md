@@ -1,6 +1,6 @@
 # altharm
 
-> **Status, 2026-09-21.** Validated end to end on Cr2SeAs; the symmetry side
+> **Status, 2026-09-21.** Validated end to end on Cr2Se2As; the symmetry side
 > additionally checked against literature classifications for MnTe (g-wave) and
 > CoF2 (d-wave). 239 tests. The reference coefficients are
 > **24x24x8, `degauss` 0.0150, band 44, 152-point circle at $k_z = 0.25b_3$,
@@ -37,7 +37,7 @@ $C_3$ rotation intact.
 ## Why do this again, from DFT
 
 The group's harmonics so far come from Wannier models fit to DFT — the
-Cr2SeAs model reproduces the DFT bands to 0.07 meV, which is a tight fit by
+Cr2Se2As model reproduces the DFT bands to 0.07 meV, which is a tight fit by
 any standard. The reason to also do it directly from DFT, in the supervisor's
 words, is that "there were some terms that are not captured by the Wannier …
 hence it would be good to have both (especially given that the DFT high
@@ -74,11 +74,23 @@ same footing as the signal it's being compared against. A coefficient at an
 turns "is the high-harmonic signal real?" from a judgement call into a number
 with a number next to it.
 
+## A note on the formula, and on the directory names
+
+The material is **Cr2Se2As**: the cell holds 4 Cr, 4 Se and 2 As, which reduces to Cr2Se2As,
+not Cr2SeAs. Earlier versions of this repository wrote Cr2SeAs throughout -- the name was
+inherited from a `Cr2SeAs_wannier_v03` directory and never checked against the atom count. The
+prose has been corrected.
+
+**The fixture directories are still named `qe_cr2seas_*`**, and one real path on disk is still
+`Cr2SeAs_wannier_v03`. Those are identifiers, not claims: renaming 22 fixture directories and
+the 24 test files referencing them would be churn with a chance of breaking a path, for no gain
+in correctness. Read them as labels.
+
 ## ...and what the noise floor does **not** measure
 
 The floor above is an error bar on the **fit**. It is not an error bar on the
 coefficient, and the difference turned out to be three orders of magnitude.
-Measured on Cr2SeAs, at $l=3$:
+Measured on Cr2Se2As, at $l=3$:
 
 | source of error | size (median over the eight allowed $l$) | does the floor see it? |
 |---|---|---|
@@ -142,7 +154,7 @@ coefficient.
 1. **Quantum ESPRESSO**, `pw.x` run non-self-consistently on an explicit
    circle of k-points.
 2. **Wannier90**, interpolating from an `hr.dat` — the group's existing
-   baseline, already validated on Cr2SeAs.
+   baseline, already validated on Cr2Se2As.
 3. **[defumat](https://github.com/joselado/defumat)**, the group's
    differentiable JAX plane-wave code. Being differentiable, it can deliver
    $\partial\Delta E/\partial\mathbf k$ exactly rather than by finite
@@ -163,7 +175,7 @@ validation; disagreement says which route to distrust for which $l$.
   carry wavefunctions (GBRV ultrasoft, pslibrary PAW). Measured in P13.
 - **Check the valence configuration when swapping families.** pslibrary's default Se PAW
   (`-dn`) carries 3d in valence -- 16 electrons rather than 6 -- which would have taken
-  Cr2SeAs from 90 electrons to 130 and silently changed which state band 44 names. The `-n`
+  Cr2Se2As from 90 electrons to 130 and silently changed which state band 44 names. The `-n`
   variant matches. P8's CoF2 entry is what this looks like when it is not checked.
 
 Things this project is built to measure rather than assume away. The numbers
@@ -253,14 +265,14 @@ implementation compiled directly into Quantum ESPRESSO are all written and teste
 | | |
 |---|---|
 | **Written and tested** | `units.py`; `basis.py`; `kpath.py`; `symmetry.py` (the numerical projector, plus the `symprec` guard below); `project.py`; `noise.py`; `bandtrack.py` (band identity by continuity); `planewaves.py` (an independent plane-wave-count sphere counter); `wannier.py`; `qe/` (writer + reader) |
-| **Validated against real data** | the Wannier route, on the group's Cr2SeAs v03 model; the QE route, on the group's real Cr2SeAs PBE+U production run — see below |
-| **Validated against real `pw.x` output** | bcc iron (interface validation, `tests/data/qe_fe_bands/`) and the group's Cr2SeAs run (production, `tests/data/qe_cr2seas_p3/`) |
+| **Validated against real data** | the Wannier route, on the group's Cr2Se2As v03 model; the QE route, on the group's real Cr2Se2As PBE+U production run — see below |
+| **Validated against real `pw.x` output** | bcc iron (interface validation, `tests/data/qe_fe_bands/`) and the group's Cr2Se2As run (production, `tests/data/qe_cr2seas_p3/`) |
 | **A second, independent implementation** | `qe_native/harmwave.f90` — a new executable compiled directly into Quantum ESPRESSO (linked against its own `PW/src`/`PP/src`, using its own `find_sym()` and LAPACK, no XML, no spglib, no numpy) that agrees with the Python route to $10^{-9}$ eV on the same real data. See `qe_native/README.md` |
 | **Not started** | the defumat route; the 3D spherical-harmonic path beyond its unit tests; a proper noise-floor measurement (see below — the current one is inconclusive, not negative) |
 
 ### What has been measured
 
-On the group's Cr2SeAs Wannier model (PBE+U, 38 orbitals per spin, 583
+On the group's Cr2Se2As Wannier model (PBE+U, 38 orbitals per spin, 583
 $\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
 
 - The symmetry module, from the structure alone, allows exactly the **odd
@@ -281,7 +293,7 @@ $\mathbf R$-vectors), at $k_z = 0.25\,b_3$ on the band nearest $E_F$:
   not monotonic, which is what the Bessel picture above predicts and what a
   simple exponential-damping story would miss.
 
-On the group's **real Cr2SeAs PBE+U DFT run** (USPP, Grimme-D3, the same $k_z$),
+On the group's **real Cr2Se2As PBE+U DFT run** (USPP, Grimme-D3, the same $k_z$),
 on the band nearest $E_F$ ($E-E_F = +0.04$ eV), first on a 56-point circle and then, to
 settle what that left open, on a 152-point one reusing the same converged density:
 

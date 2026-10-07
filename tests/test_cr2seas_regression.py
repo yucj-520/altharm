@@ -1,4 +1,4 @@
-"""Regression on the group's real Cr2SeAs Wannier model.
+"""Regression on the group's real Cr2Se2As Wannier model.
 
 Independence rule, in its strongest form here: the symmetry module predicts
 which harmonics may be non-zero from the structure alone, and the Wannier
@@ -28,7 +28,7 @@ E_FERMI = 8.1169
 
 pytestmark = pytest.mark.skipif(
     not __import__("os").path.exists(HR_UP),
-    reason="the Cr2SeAs Wannier model is not on this machine",
+    reason="the Cr2Se2As Wannier model is not on this machine",
 )
 
 CELL = np.array([
@@ -227,7 +227,7 @@ def test_p3_noise_floor_on_the_real_frozen_density_run():
     report = Path(__file__).parent / "data" / "harmwave_cr2seas" / "harmwave_report.txt"
     xml = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
     if not report.exists() or not xml.exists():
-        pytest.skip("real Cr2SeAs fixtures not present")
+        pytest.skip("real Cr2Se2As fixtures not present")
 
     ops = []
     for line in report.read_text().splitlines():
@@ -289,7 +289,7 @@ def test_p4_planewave_discontinuity_is_even_in_l_and_peaks_at_l6():
 
     xml = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
     if not xml.exists():
-        pytest.skip("real Cr2SeAs fixtures not present")
+        pytest.skip("real Cr2Se2As fixtures not present")
 
     qb = read_bands(xml)
     k_invang = qb.kpoints_tpiba * (2 * np.pi / (qb.alat_bohr * BOHR_ANG))

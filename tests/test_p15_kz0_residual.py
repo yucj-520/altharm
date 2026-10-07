@@ -109,7 +109,7 @@ def test_the_residual_tracks_the_gap_not_a_fixed_floor():
 
 
 def test_the_residual_lives_entirely_in_the_chi_minus_one_channel():
-    """Same split as P14.2 on Cr2SeAs, and the reason it is U-dependent."""
+    """Same split as P14.2 on Cr2Se2As, and the reason it is U-dependent."""
     ops = _ops()
     for u in RUNS:
         _, dirs, dE = _load(u)

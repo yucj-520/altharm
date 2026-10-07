@@ -101,7 +101,7 @@ class CircularBasis:
         The check exists because getting it wrong is silent.  Handing a circle
         in the y-z plane to a basis left at its default x-y frame returns
         angles, a design matrix and a plausible-looking allowed set -- on
-        Cr2SeAs, thirteen scattered ``l`` where the correct frame gives the even
+        Cr2Se2As, thirteen scattered ``l`` where the correct frame gives the even
         ones.  Nothing raises, and the symmetrizer's off-block elements go from
         1e-7 to 165 without anyone being told.
 

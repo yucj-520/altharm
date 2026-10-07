@@ -238,7 +238,7 @@ PROGRAM harmwave
   ! this routine got backwards: it time-reversed only the operations that
   ! had already survived the plane filter, silently dropping every
   ! kz-flipping operation's time-reversed partner and so over-predicting
-  ! the allowed harmonics (found {0,3,6,9,12} on Cr2SeAs instead of the
+  ! the allowed harmonics (found {0,3,6,9,12} on Cr2Se2As instead of the
   ! correct {3,9,15,...}, checked against altharm.symmetry.allowed_harmonics
   ! fed this routine's own operator dump).
   !

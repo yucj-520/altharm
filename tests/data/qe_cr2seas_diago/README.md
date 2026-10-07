@@ -1,4 +1,4 @@
-# Real pw.x output, Cr2SeAs, two diagonalisation thresholds
+# Real pw.x output, Cr2Se2As, two diagonalisation thresholds
 
 Bands-only reruns on the same 152-point circle, reusing the same converged
 60 Ry density (no scf rerun), with `diago_thr_init` loosened from the

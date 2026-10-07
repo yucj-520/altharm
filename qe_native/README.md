@@ -42,7 +42,7 @@ where they *disagree* is exactly what a first version of this tool did.
 A first version compiled cleanly and ran to completion, but its
 time-reversal closure only doubled operations that had **already** survived
 the plane-preservation filter for the given circle. The operation that
-actually makes Cr2SeAs an altermagnet — a horizontal mirror that exchanges
+actually makes Cr2Se2As an altermagnet — a horizontal mirror that exchanges
 the two Cr sublattices — flips k_z on its own and so fails that filter
 directly; its time-reversed partner (which restores k_z) needs the mirror
 included in a closure taken over the *full* symmetry group, before
@@ -59,7 +59,7 @@ operation set first, filtering for the circle's plane second (see the
 
 ## Status
 
-Validated once, on the group's real Cr2SeAs run (PBE+U, USPP, 56-point
+Validated once, on the group's real Cr2Se2As run (PBE+U, USPP, 56-point
 circle at k_z = 0.25 b3, band 44 -- the one nearest E_F, at E-E_F = +0.04 eV):
 eigenvalues agree with the Python XML route to 1e-9 eV, the fitted
 coefficients agree to 1e-9 eV coefficient-by-coefficient, and the operation

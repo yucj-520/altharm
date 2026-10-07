@@ -62,7 +62,7 @@ set, and the $d$-wave form recovered rather than assumed. $S^2=S$ holds to $2\ti
 and every Cartesian rotation is orthogonal to $10^{-10}$ on a hexagonal cell, which is the
 guard against the metric convention being wrong.
 
-On the group's real Cr2SeAs the allowed set at $k_z \ne 0$ came out
+On the group's real Cr2Se2As the allowed set at $k_z \ne 0$ came out
 $\{3, 9, 15, 21, 27, 33, 39, 45\}$ — the odd multiples of three — and **nothing at all** in
 the $k_z = 0$ plane. Both follow by hand: $C_{3z}$ preserves the sublattices so $l$ must be a
 multiple of 3; $M_z$ exchanges them and, combined with time reversal, gives $C_{2z}$ with
@@ -330,7 +330,7 @@ different circle radii at one `ecutwfc`) and see whether the resulting artefact 
 moves the way a plane-wave-counting argument predicts — a genuinely physical high-$l$ signal
 would not move with `ecutwfc` at all.
 
-**Measured, on the group's real Cr2SeAs circle** (56 k-points, $k_z = 0.25\,b_3$,
+**Measured, on the group's real Cr2Se2As circle** (56 k-points, $k_z = 0.25\,b_3$,
 `ecutwfc = 60` Ry): the plane-wave count steps between 10770 and 10801 around the circle -- a
 peak-to-trough swing of 31 out of ~10800, about 0.3%. Its own angular harmonic spectrum
 (`altharm.planewaves.discontinuity_spectrum`), fit on the exact same basis as the splitting:
@@ -389,7 +389,7 @@ noise.
 **Measured, the `ecutwfc` half — the cheap part first, and it changed what the expensive part
 should be.** `count_planewaves` reproduces QE's own plane-wave count exactly (P4), so the size
 of the basis-set discontinuity at any candidate cutoff can be measured *without running DFT at
-all*. Scanning 50-100 Ry in 2 Ry steps on the real Cr2SeAs circle, reporting the $l=6$ amplitude
+all*. Scanning 50-100 Ry in 2 Ry steps on the real Cr2Se2As circle, reporting the $l=6$ amplitude
 of the plane-wave count per million plane waves:
 
 | ecutwfc (Ry) | 54 | 60 | 66 | 72 | 80 | 96 | 100 |
@@ -450,7 +450,7 @@ the fit, not whether the band structure handed to the fit is converged.** Pinned
 ## P6 — Wannier cross-check and the truncation study
 
 **Establishes:** two things at once. First, that the QE route and the group's existing
-Wannier90 route (`hr.dat` interpolation, already validated to 0.07 meV against DFT on Cr2SeAs)
+Wannier90 route (`hr.dat` interpolation, already validated to 0.07 meV against DFT on Cr2Se2As)
 agree on the allowed-$l$ coefficients, each within the other's noise floor. Second — the part
 that's actually new — exactly how a finite hopping range $R_\mathrm{max}$ damps a chosen
 high-$l$ harmonic, turning the Bessel-function suppression argument in `README.md` into a
@@ -462,7 +462,7 @@ controlled radius, truncate it at a series of $R_\mathrm{max}$ values, and confi
 damping matches the $J_l(k_0 R_\mathrm{max})$ prediction rather than some other falloff.
 
 **Measured: the truncation half is closed; the QE half is not started.**
-`altharm/wannier.py` reads `hr.dat` and the study has been run on the group's v03 Cr2SeAs
+`altharm/wannier.py` reads `hr.dat` and the study has been run on the group's v03 Cr2Se2As
 model (38 orbitals per spin, 583 R-vectors, reach 42.6 Å), at $k_z = 0.25\,b_3$ on the band
 nearest $E_F$. Cutting **in-plane** $|R|$ while leaving the c axis intact:
 
@@ -487,7 +487,7 @@ collapses to zero. It looks exactly like truncation killing the harmonics. `trun
 takes a `plane_normal`, and the circle's plane should always be passed to it.
 
 **The QE↔Wannier agreement itself: measured, and now exhaustive.** On band 44 of the
-group's real Cr2SeAs run, a 152-point circle (P3) puts the DFT-fitted allowed harmonics within
+group's real Cr2Se2As run, a 152-point circle (P3) puts the DFT-fitted allowed harmonics within
 1% of this Wannier model's own fit at **every one of the eight allowed harmonics from $l=3$ to
 $l=45$**: 59.17/59.48 ($l=3$), 38.82/39.06 ($l=9$), 3.16/3.18 ($l=15$), 8.42/8.44 ($l=21$),
 1.49/1.49 ($l=27$), 2.84/2.84 ($l=33$), 0.99/1.00 ($l=39$), 1.15/1.14 meV ($l=45$; DFT/Wannier).
@@ -534,7 +534,7 @@ cleared, and each is worth recording because none was visible from the README.
    `/tmp`; every probe on the login node worked and every SLURM job failed with
    `ModuleNotFoundError`. Anything a batch job touches has to live on `/scratch` or `$HOME`.
 
-**Cost, measured rather than guessed.** On the real Cr2SeAs cell, defumat's SCF costs
+**Cost, measured rather than guessed.** On the real Cr2Se2As cell, defumat's SCF costs
 $37.8\,\mathrm{s} + 6.8\,\mathrm{s} \times N_k$ per iteration (fit to 1, 2 and 4 k-points;
 the 80% fixed part is density, FFT, ultrasoft augmentation and Hubbard, none of which scales
 with $k$). For QE's 69 irreducible k-points that is ~8.4 minutes an iteration, ~5 hours for the
@@ -542,7 +542,7 @@ with $k$). For QE's 69 irreducible k-points that is ~8.4 minutes an iteration, ~
 to be the larger cost and is being timed separately.
 
 **Measured, and P7 is closed for the harmonic comparison.** defumat ran the full pipeline on
-the real Cr2SeAs cell: SCF to convergence (45 iterations, 43.8 min) then the 152-point circle
+the real Cr2Se2As cell: SCF to convergence (45 iterations, 43.8 min) then the 152-point circle
 (135.3 min). Compared against a QE run whose input file is **byte-identical** (6x6x2 SCF mesh,
 no vdW) -- which matters more here than it normally would, since P3's second check showed the
 SCF mesh alone moves these coefficients by 6-29%, so comparing defumat-on-6x6x2 against
@@ -565,7 +565,7 @@ no FFT, no ultrasoft augmentation and no Hubbard code is a property of the *k-sa
 physics*, not an artefact of either code -- which is exactly what P3's aliasing diagnosis
 predicted and what no single-code measurement could establish.
 
-**The three routes, all on Cr2SeAs band 44:** QE (Fortran plane-wave), Wannier90 (tight-binding
+**The three routes, all on Cr2Se2As band 44:** QE (Fortran plane-wave), Wannier90 (tight-binding
 interpolation of a *different* plane-wave run) and defumat (Python plane-wave) agree at every
 one of the eight allowed harmonics. QE-vs-defumat is ~10x tighter than QE-vs-Wannier (0.04% vs
 0.5%), as it should be: the first pair solve the same equations, the second pair includes an
@@ -832,7 +832,7 @@ KS states. Pinned in `tests/test_p13_pseudo_and_functional.py`.
 ## P8 — Production: MnTe and CoF2, and where the high harmonics actually are
 
 **Establishes:** the method on materials with independent literature classifications, rather
-than only on the group's own Cr2SeAs where the answer comes from this project.
+than only on the group's own Cr2Se2As where the answer comes from this project.
 
 **Independent check:** two systems chosen so their symmetry requires **opposite** answers on the
 same plane. MnTe's g-wave form $\Delta E \propto k_z k_\perp^3\cos 3\theta$ vanishes identically at
@@ -856,7 +856,7 @@ $k_x^2-k_y^2$ odd. The symmetrizer predicted it before any DFT (keeps 100% of $\
 0.00% of $\cos2\theta$); the DFT gives cos/sin = **9.5e-15**.
 
 **Neither material has a symprec cliff** -- P6_3/mmc (12+12 ops) and P4_2/mnm (8+8) stable from
-1e-6 to 1e-2, where Cr2SeAs flips at 1e-5. So that trap is not universal, but it still has to be
+1e-6 to 1e-2, where Cr2Se2As flips at 1e-5. So that trap is not universal, but it still has to be
 scanned per structure to know.
 
 **MnTe resolves the full ladder to $l=45$.** Band 20, $U=4$: 949.38 / 53.45 / 12.18 / 3.96 /
@@ -864,9 +864,9 @@ scanned per structure to know.
 Three separate reasons, each confirming an earlier phase from the other side:
 
 1. a **semiconductor**, so P3's Fermi-surface sampling problem does not arise -- floor
-   0.02-0.03 μeV against Cr2SeAs's 23.6 μeV;
+   0.02-0.03 μeV against Cr2Se2As's 23.6 μeV;
 2. **exact Wyckoff positions**, so no relaxation noise -- cos/sin at $l=3$ is 1e-13 to 4e-12
-   against 8.6e-10 for relaxed Cr2SeAs at the same $l$;
+   against 8.6e-10 for relaxed Cr2Se2As at the same $l$;
 3. a splitting an order of magnitude larger.
 
 Band 20's ladder is **exponential**, $A \propto e^{-l/6.35}$, $R^2 = 0.997$ over four decades,
@@ -882,7 +882,7 @@ on the band nearest $E_F$:
 |---|---|---|
 | CoF2 | $l=2$, 46.7 meV | **0.021%** |
 | MnTe | $l=3$, 949.4 meV | **5.6%** |
-| **Cr2SeAs** | $l=3$, 64.3 meV | **67.6%** |
+| **Cr2Se2As** | $l=3$, 64.3 meV | **67.6%** |
 
 **The two canonical altermagnets are essentially single-wave; the group's own material is the
 multi-harmonic one** -- its $l=9$ is two thirds of its $l=3$. That is where "the DFT high
@@ -922,9 +922,9 @@ eigenvalues for the fit -- no XML parsing, no spglib, no numpy.
 
 **Independent check:** exactly the point of building it. Two implementations sharing no
 language, no symmetry engine, no linear-algebra library and no unit-conversion path, run on the
-same real Cr2SeAs data, are compared coefficient by coefficient.
+same real Cr2Se2As data, are compared coefficient by coefficient.
 
-**Measured:** built and validated once, on the group's real Cr2SeAs run (PBE+U, USPP, 56-point
+**Measured:** built and validated once, on the group's real Cr2Se2As run (PBE+U, USPP, 56-point
 circle at $k_z = 0.25\,b_3$, band nearest $E_F$):
 
 - eigenvalue differences $\Delta E(\theta)$: Fortran (QE's `et`, Ry$\to$eV) vs Python (XML,
@@ -938,7 +938,7 @@ circle at $k_z = 0.25\,b_3$, band nearest $E_F$):
 
 **A bug this phase found that a clean compile could not.** A first version's time-reversal
 closure only doubled operations that had *already* survived the plane-preservation filter for
-the given circle. Cr2SeAs's sublattice-exchanging mirror flips $k_z$ on its own and so fails
+the given circle. Cr2Se2As's sublattice-exchanging mirror flips $k_z$ on its own and so fails
 that filter directly; its time-reversed partner (which restores $k_z$) needs the mirror in a
 closure taken over the *full* symmetry group, before filtering -- not after. The bug compiled
 cleanly, ran to completion, and reported the allowed set as $\{0,3,6,9,12\}$ instead of
@@ -968,7 +968,7 @@ $k' = Rk$ preserves $n\cdot k$ for every $k$ exactly when $R^{T} n = n$. The pla
 needs no separate test, since $R^{T}n = n$ gives $n\cdot(Rk) = n\cdot k$ automatically.
 
 For $n = +\hat z$ this reduces to v1's row-3 test and the frame becomes $(x,y)$ exactly, so a
-$k_x k_y$ circle must reproduce v1 bit for bit. On the corrected Cr2SeAs reference it does:
+$k_x k_y$ circle must reproduce v1 bit for bit. On the corrected Cr2Se2As reference it does:
 **all eight allowed harmonics identical** ($l=9$ differs by 2.3e-13, the rest by 0), largest
 absolute difference over all 91 coefficients **1e-14 eV**, normal detected as $(0,0,1)$, offset
 0.0550574 = $a/4c$ as it should be, and exactly four new lines in the report. Pinned in
@@ -996,7 +996,7 @@ belongs once a phase measures it.
   a related VASP `ICHARG=1` calculation, not yet on this project's own QE route) — P3.
 - **Basis-set discontinuity** from `ecutwfc`'s discretely-changing plane-wave count — P4.
 - **`symprec` deciding the physics.** *Measured, and the most dangerous one found so far.* On
-  the group's own Cr2SeAs structure, spglib reports the non-magnetic parent as **P3m1 (#156)
+  the group's own Cr2Se2As structure, spglib reports the non-magnetic parent as **P3m1 (#156)
   with no sublattice-exchanging operation at all** for `symprec` ≤ 1e-5, and as **P-6m2 (#187)
   with six of them** for `symprec` ≥ 5e-5. The horizontal mirror maps every atom onto its
   partner to within **1.0e-5 Å**, which is spglib's default tolerance — so *the default returns
@@ -1041,7 +1041,7 @@ belongs once a phase measures it.
 - **The circle's plane and the basis frame must be the same plane.** *Measured, and it was
   silent.* `CircularBasis` takes `e1`/`e2` and measures the angle there; handing it directions
   from another plane returns angles, a design matrix and an allowed set, all plausible and all
-  wrong. On a 152-point Cr2SeAs circle in the $k_yk_z$ plane:
+  wrong. On a 152-point Cr2Se2As circle in the $k_yk_z$ plane:
 
   | basis frame | $d\cdot n$ spread | off-block max in $S$ | allowed $l$ |
   |---|---|---|---|
@@ -1078,7 +1078,7 @@ response, and exactly wrong for an eigenvalue. Both halves are now measured.
 **The linear argument.** On a circle of radius $k_0$,
 $e^{i\mathbf{k}\cdot\mathbf{R}} = \sum_l i^l J_l(k_0 R_\parallel) e^{il(\theta-\phi_R)}$, so any
 quantity *linear* in $H(\mathbf{R})$ has its $l$-th harmonic weighted by $J_l(k_0 R)$, which is
-exponentially small until $k_0 R \sim l$. For Cr2SeAs $k_0 = 0.4868\ \text{Å}^{-1}$:
+exponentially small until $k_0 R \sim l$. For Cr2Se2As $k_0 = 0.4868\ \text{Å}^{-1}$:
 
 | $l$ | 3 | 9 | 15 | 21 | 27 | 33 | 39 | 45 |
 |---|---|---|---|---|---|---|---|---|
@@ -1176,7 +1176,7 @@ mechanism rather than a correlation.
 
 ### P14.4 The rule, and the inversion
 
-A material's splitting contains only allowed harmonics at every order; on Cr2SeAs the allowed
+A material's splitting contains only allowed harmonics at every order; on Cr2Se2As the allowed
 set is $l \equiv 3 \pmod 6$, a lattice of period $p=6$. The part above $l_\mathrm{max}$ aliases
 to $l' = |l - mN|$, which is allowed exactly when $mN \equiv 0 \pmod p$. So the tail first
 reaches the signal at alias order
@@ -1262,7 +1262,7 @@ fixtures:
 |---|---|---|---|---|---|---|
 | MnTe U=4 | 152 | 6 | 2 | 3 | 0.0234 μeV | 5.630% |
 | **CoF2 U=0** | 152 | 4 | **4** | **1** | 0.0369 μeV | **0.021%** |
-| Cr2SeAs U=3 | 304 | 6 | 2 | 3 | 1.0082 μeV | **65.601%** |
+| Cr2Se2As U=3 | 304 | 6 | 2 | 3 | 1.0082 μeV | **65.601%** |
 
 **CoF2's allowed set is $l = 2,6,10,14$ — period 4 — and 152 is divisible by 4, so the
 published P8 CoF2 runs have been in the $m=1$ regime all along.** That went unnoticed.
@@ -1277,7 +1277,7 @@ Two consequences:
    *lower* than CoF2's at $m=1$ (0.0369 μeV). Both are low because both materials are nearly
    single-wave, not because of their sampling.
 2. **The failure mode is not uniform across materials — it bites hardest on the interesting
-   ones.** A steep harmonic ladder is nearly immune to any $N$; a slow one is at risk. Cr2SeAs,
+   ones.** A steep harmonic ladder is nearly immune to any $N$; a slow one is at risk. Cr2Se2As,
    whose second harmonic is 66% of its first, is precisely the kind of material this project
    exists to study, and precisely the kind $m=1$ would destroy.
 
@@ -1314,7 +1314,7 @@ Decomposed by P14's channels, it sits **entirely in $\chi = -1$**:
 (The $\chi=+1$ figures are small but *not* machine zero -- quoting them as 0 would overstate
 the case by five orders.)
 
-which is the same split P14.2 found on Cr2SeAs: constraints relating $\varepsilon_\uparrow$ to
+which is the same split P14.2 found on Cr2Se2As: constraints relating $\varepsilon_\uparrow$ to
 itself are exact, constraints relating it to $\varepsilon_\downarrow$ hold only as well as the
 self-consistent density respects sublattice exchange. That is why it is $U$-dependent and not a
 floor -- opening the gap by 2.4x improves it by 98x.
@@ -1354,7 +1354,7 @@ slow for a multi-harmonic one. Quoting a $1/N_k$ law would be fitting the wrong 
 **Where it stops.** The tail cannot be followed below the point where the $\chi = -1$
 constraints stop being exact, because those are what make a forbidden harmonic forbidden in the
 first place. On this density that error is **0.766 μeV** (and $\chi = +1$ is 0.072 μeV). The
-304-point floor is 1.865 μeV, i.e. **2.4x above it** -- so Cr2SeAs at 304 points is approaching
+304-point floor is 1.865 μeV, i.e. **2.4x above it** -- so Cr2Se2As at 304 points is approaching
 the crossover but has not reached it, and a further increase in $N$ can buy at most about a
 factor of two before the floor stops responding.
 
@@ -1496,7 +1496,7 @@ was **43% off** -- nearly a factor of two. Median shift over the twelve allowed 
 
 The synthetic model predicted a median error of **18%** at $m=1$; the measurement is **2.18%**
 on the $k_xk_y$ circle and 1.44% on the y-z one. Mechanism and direction confirmed, **magnitude
-an order of magnitude smaller**, because Cr2SeAs's real tail above $l = 45$ decays faster than
+an order of magnitude smaller**, because Cr2Se2As's real tail above $l = 45$ decays faster than
 the synthetic tail assumed. Quote the measured numbers, not the model's.
 
 ### What this cost, and the two guards it bought
@@ -1620,7 +1620,7 @@ harmonic is halved; the weakest is down by a factor of six.
 
 **The next/leading ratio moves 1.5 percentage points across a range where the leading harmonic
 changes by 55%.** So this project's headline result -- that the high-harmonic physics lives in
-Cr2SeAs (67.6%) and not in the canonical altermagnets (MnTe 5.6%, CoF2 0.021%), P8 -- **is
+Cr2Se2As (67.6%) and not in the canonical altermagnets (MnTe 5.6%, CoF2 0.021%), P8 -- **is
 untouched by the $U$ uncertainty.** All eight allowed harmonics also stay resolved over the
 whole range.
 

@@ -12,7 +12,7 @@ its coordinate-free form: k' = R k preserves n.k for every k exactly when
 R^T n = n.  For n = +z that reduces to v1's row-3 test, so a k_x k_y circle must
 come out bit for bit the same -- which is what this file checks.
 
-**Measured**, on the corrected Cr2SeAs reference (24x24x8, degauss 0.0150,
+**Measured**, on the corrected Cr2Se2As reference (24x24x8, degauss 0.0150,
 152-point circle at k_z = 0.25 b3, band 44):
 
 - all eight allowed harmonics identical (l=9 differs by 2.3e-13, the rest by 0)

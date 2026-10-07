@@ -161,7 +161,7 @@ def truncate(wh: WannierHam, rmax_ang: float, plane_normal=None) -> WannierHam:
         on a circle in the ``k_x k_y`` plane is resolved by in-plane hoppings;
         the out-of-plane ones set the ``k_z`` dispersion and have nothing to do
         with it.  A plain isotropic cut confounds the two, and for a cell with a
-        long c axis it does so violently: in Cr2SeAs, ``c = 16.9 A``, so any
+        long c axis it does so violently: in Cr2Se2As, ``c = 16.9 A``, so any
         isotropic cut below that removes every ``R_z != 0`` hopping at once, the
         model loses its ``k_z`` dependence entirely, and a splitting that lives
         only at ``k_z != 0`` collapses to zero.  That looks like the harmonics

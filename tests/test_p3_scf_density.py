@@ -44,7 +44,7 @@ REPORT = HERE / "data" / "harmwave_cr2seas" / "harmwave_report.txt"
 
 pytestmark = pytest.mark.skipif(
     not (DENSE.exists() and COARSE.exists() and FINE.exists() and REPORT.exists()),
-    reason="the two-density Cr2SeAs fixtures are not present",
+    reason="the two-density Cr2Se2As fixtures are not present",
 )
 
 BAND, LMAX = 44, 45

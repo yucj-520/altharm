@@ -1,5 +1,5 @@
 """Cross-check: the QE-native Fortran tool (harmwave.x) against this
-package's independent Python implementation, on the same real Cr2SeAs run.
+package's independent Python implementation, on the same real Cr2Se2As run.
 
 This is the strongest form of the independence rule the project follows.
 Two completely separate pipelines computed these numbers:
@@ -39,7 +39,7 @@ REPORT = Path(__file__).parent / "data" / "harmwave_cr2seas" / "harmwave_report.
 
 pytestmark = pytest.mark.skipif(
     not XML.exists() or not REPORT.exists(),
-    reason="the real Cr2SeAs fixtures are not present",
+    reason="the real Cr2Se2As fixtures are not present",
 )
 
 BAND0 = 44           # 0-based Python index == Fortran's band_index=45 (1-based).

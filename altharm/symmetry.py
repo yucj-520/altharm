@@ -78,7 +78,7 @@ def _cartesian_rotation(rot_frac, cell):
 
     It is deliberately *not* enforced here.  Enforcing it was tried and
     reverted: the deviation is 0 for a cubic or tetragonal cell but 2.2e-7 for
-    Cr2SeAs, whose hexagonal cell is written to finite precision in QE's XML,
+    Cr2Se2As, whose hexagonal cell is written to finite precision in QE's XML,
     while a cell with a lattice constant wrong by 16% gives 5.2e-6.  A factor
     of 24 between legitimate and broken is too narrow to put a hard error in --
     the threshold would reject this project's own main material on a slightly
@@ -208,7 +208,7 @@ def symprec_scan(cell, scaled_positions, numbers, magmoms,
     that makes the material an altermagnet at all, and it is often the first
     casualty of a tight tolerance.
 
-    Measured on the group's Cr2SeAs model, the parent is reported as P3m1 with
+    Measured on the group's Cr2Se2As model, the parent is reported as P3m1 with
     six operations and *no* exchanging operation at symprec <= 1e-5, and as
     P-6m2 with six of each at symprec >= 5e-5.  The horizontal mirror maps every
     atom onto its partner to within 1.0e-5 Angstrom, which is exactly the
@@ -336,7 +336,7 @@ def _preserves(basis, op, dirs):
     manifolds of the form ``{d : d.n = c}``, and an operation preserves such a
     set exactly when it leaves that component alone.
 
-    The distinction matters.  In Cr2SeAs the operation that exchanges the
+    The distinction matters.  In Cr2Se2As the operation that exchanges the
     magnetic sublattices is the horizontal mirror ``M_z``, which maps the
     ``+k_z`` cone to the ``-k_z`` one and so does not constrain a single cone by
     itself -- but combined with time reversal it gives ``C_2z``, which does.

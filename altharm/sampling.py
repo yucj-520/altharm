@@ -9,7 +9,7 @@ it is anti-correlated: the sample count that makes the floor read exactly zero
 is the one that corrupts the reported coefficients most.
 
 The mechanism is aliasing with a parity.  A material's spin splitting contains
-only symmetry-allowed harmonics, at every order -- on Cr2SeAs the allowed set
+only symmetry-allowed harmonics, at every order -- on Cr2Se2As the allowed set
 is ``l = 3, 9, 15, ...``, i.e. ``l = 3 (mod 6)``, so the allowed set is a
 lattice of period ``p = 6``.  The part of that ladder above ``lmax`` is not
 resolved; on ``n`` sample points it aliases down onto ``l' = |l - m n|`` for
@@ -25,7 +25,7 @@ integer ``m``.  Whether ``l'`` is itself allowed decides everything:
   where it is visible as the floor, and the allowed coefficients are only
   reached at order ``m``, by which point the tail has decayed.
 
-Measured on a tail fitted to Cr2SeAs (``tests/test_p14_sampling_aliasing.py``),
+Measured on a tail fitted to Cr2Se2As (``tests/test_p14_sampling_aliasing.py``),
 sweeping every ``n`` from 120 to 199:
 
 ===============  =====  ==================  ====================
@@ -47,7 +47,7 @@ is the size of the unresolved tail, so a nearly single-wave altermagnet is
 almost immune and a multi-harmonic one is not.  The P8 CoF2 runs are in fact at
 ``m = 1`` -- its allowed set is ``l = 2, 6, 10, 14``, period 4, and 152 is
 divisible by 4 -- and came to no harm, because its second allowed harmonic is
-0.021% of its first.  Cr2SeAs, at 66%, would have been destroyed.  The failure
+0.021% of its first.  Cr2Se2As, at 66%, would have been destroyed.  The failure
 mode therefore bites hardest on exactly the materials this project is for.
 """
 
@@ -127,7 +127,7 @@ def sampling_report(n_points: int, allowed_l: Sequence[int]) -> SamplingReport:
             f"ALLOWED l at first order, so the forbidden-harmonic floor will read "
             f"essentially zero while the reported coefficients carry the whole "
             f"tail as error. How bad that is scales with the tail: on a material "
-            f"whose harmonic ladder decays slowly (Cr2SeAs, 2nd/1st = 66%) it is "
+            f"whose harmonic ladder decays slowly (Cr2Se2As, 2nd/1st = 66%) it is "
             f"~18%; on one that is nearly single-wave (CoF2, 0.021%) it is "
             f"negligible. Use a count coprime to {period}, "
             f"e.g. {_nearest_coprime(n_points, period)}.",

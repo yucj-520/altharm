@@ -1,4 +1,4 @@
-"""Band tracking applied to the real Cr2SeAs circle -- what it found there.
+"""Band tracking applied to the real Cr2Se2As circle -- what it found there.
 
 `tests/test_bandtrack.py` checks the tracker against hand-built two-level
 models. This file is the other half: what happens when it is pointed at the
@@ -23,7 +23,7 @@ from altharm.bandtrack import track_by_continuity
 XML = Path(__file__).parent / "data" / "qe_cr2seas_dense" / "data-file-schema.xml"
 
 pytestmark = pytest.mark.skipif(
-    not XML.exists(), reason="the dense-circle Cr2SeAs fixture is not present"
+    not XML.exists(), reason="the dense-circle Cr2Se2As fixture is not present"
 )
 
 BAND = 44           # the band nearest E_F; the one every harmonic fit uses

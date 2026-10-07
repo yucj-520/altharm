@@ -1,4 +1,4 @@
-# Real pw.x output, Cr2SeAs PBE+U at two further cutoffs
+# Real pw.x output, Cr2Se2As PBE+U at two further cutoffs
 
 Same structure, same 152-point circle, same k_z as `qe_cr2seas_dense/`, with
 scf re-converged in each basis (a density converged at 60 Ry is not a clean

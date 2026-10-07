@@ -2,7 +2,7 @@
 
 The structure came out of a VASP relaxation.  A relaxation converges forces, not
 coordinates, and the usual criteria leave the atoms good to something like
-1e-3 A.  But the operation that makes Cr2SeAs an altermagnet -- the horizontal
+1e-3 A.  But the operation that makes Cr2Se2As an altermagnet -- the horizontal
 mirror M_z, which maps each Cr onto its opposite-spin partner -- only holds to
 1.6e-5 A in the structure as delivered.  There are two orders of magnitude
 between "as accurate as the relaxation guarantees" and "as accurate as the
@@ -103,7 +103,7 @@ from altharm.symmetry import (
 HERE = Path(__file__).parent
 
 # ------------------------------------------------------------------ the structure
-# The group's relaxed Cr2SeAs cell, exactly as it goes into scf.in.
+# The group's relaxed Cr2Se2As cell, exactly as it goes into scf.in.
 CELL = np.array([
     [3.7258396285, 0.0000002055, 0.0000000080],
     [-1.8629196361, 3.2266718606, -0.0000000204],

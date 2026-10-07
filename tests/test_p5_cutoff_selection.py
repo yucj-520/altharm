@@ -4,7 +4,7 @@
 exactly (tests/test_planewaves.py), and needs no DFT run -- so the size of
 the basis-set discontinuity at any candidate cutoff can be measured before
 spending a single core-hour. This file records what that scan found on the
-real Cr2SeAs circle, and it is actionable rather than merely descriptive.
+real Cr2Se2As circle, and it is actionable rather than merely descriptive.
 
 Independence rule: the reference is arithmetic on the lattice -- how many
 reciprocal-lattice points fall inside a sphere of a given radius -- computed
@@ -25,7 +25,7 @@ from altharm.units import BOHR_ANG
 XML = Path(__file__).parent / "data" / "qe_cr2seas_dense" / "data-file-schema.xml"
 
 pytestmark = pytest.mark.skipif(
-    not XML.exists(), reason="the dense-circle Cr2SeAs fixture is not present"
+    not XML.exists(), reason="the dense-circle Cr2Se2As fixture is not present"
 )
 
 

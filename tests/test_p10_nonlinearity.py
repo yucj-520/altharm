@@ -8,7 +8,7 @@ of radius k0,
     e^{i k.R} = sum_l i^l J_l(k0 |R_parallel|) e^{i l (theta - phi_R)},
 
 so any quantity LINEAR in H(R) has its l-th harmonic weighted by J_l(k0 |R|),
-which is exponentially small until k0|R| ~ l.  For Cr2SeAs, k0 = 0.4868 1/Ang,
+which is exponentially small until k0|R| ~ l.  For Cr2Se2As, k0 = 0.4868 1/Ang,
 so l = 45 would need hoppings out to ~92 Ang -- 25 unit cells.  No Wannier model
 reaches that, and the group's reaches 25.8 Ang.
 
@@ -41,7 +41,7 @@ HR_DN = f"{ROOT}/hamiltonian/c.dn_hr.dat"
 
 pytestmark = pytest.mark.skipif(
     not os.path.exists(HR_UP),
-    reason="the Cr2SeAs Wannier model is not on this machine",
+    reason="the Cr2Se2As Wannier model is not on this machine",
 )
 
 CELL = np.array([

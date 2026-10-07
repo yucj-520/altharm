@@ -2,7 +2,7 @@
 
 CoF2 is the third system and the one that makes the symmetry projector hard to
 fool. Rutile's d-wave form is dE ∝ k_x k_y, which carries **no** k_z, so the
-k_z = 0 plane is NOT nodal -- the opposite of MnTe and Cr2SeAs, where the
+k_z = 0 plane is NOT nodal -- the opposite of MnTe and Cr2Se2As, where the
 sublattice-exchanging mirror forces dE = -dE there. One projector, one analysis
 pipeline, two systems, two opposite required answers.
 
@@ -27,8 +27,8 @@ sin2θ and 0.00% of cos2θ.
 **CoF2 is nearly a single harmonic**, which turned out to be the interesting
 part. Its ladder on band 30 at k_z = 0 is 122.5 / 0.021 / 0.0014 / 0.00004 meV
 for l = 2, 6, 10, 14: the second allowed harmonic is **0.021%** of the first.
-Against MnTe's 5.6% and Cr2SeAs's 67.6%. So of the three, the two canonical
-altermagnets are essentially single-wave and **the group's own Cr2SeAs is the
+Against MnTe's 5.6% and Cr2Se2As's 67.6%. So of the three, the two canonical
+altermagnets are essentially single-wave and **the group's own Cr2Se2As is the
 one with genuinely multi-harmonic structure** -- l = 9 at two thirds of l = 3.
 That is where the "high harmonic part would be genuinely new" lives.
 
@@ -142,7 +142,7 @@ def test_the_splitting_is_essentially_a_pure_sine_of_two_theta():
 
 
 def test_cof2_is_nearly_a_single_harmonic():
-    """0.021% -- the contrast that makes Cr2SeAs the interesting one."""
+    """0.021% -- the contrast that makes Cr2Se2As the interesting one."""
     f, floor, _ = _fit(KZ0)
     a = f.amplitude_by_l()
     assert a[2] * 1e3 == pytest.approx(122.5, rel=0.02)
@@ -158,7 +158,7 @@ def test_high_harmonic_richness_spans_three_orders_across_the_three_systems():
     next-allowed over leading, on the band nearest E_F of each:
       CoF2    2.1e-4   (l=6 / l=2)
       MnTe    5.6e-2   (l=9 / l=3)
-      Cr2SeAs 6.8e-1   (l=9 / l=3)
+      Cr2Se2As 6.8e-1   (l=9 / l=3)
 
     The two canonical altermagnets are essentially single-wave; the group's own
     material is the multi-harmonic one.  Note CoF2's set steps by 4 rather than
@@ -171,7 +171,7 @@ def test_high_harmonic_richness_spans_three_orders_across_the_three_systems():
 
     cr = HERE / "data" / "qe_cr2seas_sm24" / "data-file-schema.xml"
     if not cr.exists():
-        pytest.skip("the Cr2SeAs reference fixture is not present")
+        pytest.skip("the Cr2Se2As reference fixture is not present")
     q = read_bands(cr)
     th = np.arctan2(q.kpoints_tpiba[:, 1], q.kpoints_tpiba[:, 0])
     dirs = np.stack([np.cos(th), np.sin(th), 0.093 * np.ones_like(th)], axis=1)
@@ -181,7 +181,7 @@ def test_high_harmonic_richness_spans_three_orders_across_the_three_systems():
 
     assert cof2 < 1e-3
     assert cr2seas == pytest.approx(0.676, rel=0.05)
-    assert cr2seas / cof2 > 1000, "Cr2SeAs should be far richer in high harmonics"
+    assert cr2seas / cof2 > 1000, "Cr2Se2As should be far richer in high harmonics"
 
 
 # ------------------------- U = 4 reorders the bands, so the index stops meaning

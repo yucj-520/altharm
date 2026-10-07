@@ -7,7 +7,7 @@ the right shape, and the fit still converges.  What comes out is a
 parametrisation that is not monotone along the sample, and an allowed set that
 looks plausible and is wrong.
 
-Measured on Cr2SeAs, a 152-point circle in the y-z plane:
+Measured on Cr2Se2As, a 152-point circle in the y-z plane:
 
 | basis frame | d.n spread | off-block max in S | allowed l |
 |---|---|---|---|
@@ -60,7 +60,7 @@ def test_a_great_circle_through_the_origin_is_still_fine():
 
 
 def test_a_cone_at_fixed_kz_is_still_fine():
-    """d.n = const != 0 -- what every Cr2SeAs run in this repository uses."""
+    """d.n = const != 0 -- what every Cr2Se2As run in this repository uses."""
     b = CircularBasis(12)
     pts = circle(0.5, 200, center=(0, 0, 0.1))
     d = pts / np.linalg.norm(pts, axis=1, keepdims=True)
@@ -96,7 +96,7 @@ def test_evaluate_inherits_the_guard():
 #
 #   cubic / tetragonal (CoF2, Fe)                      0
 #   hexagonal, exact Wyckoff (MnTe)                    2.7e-11
-#   hexagonal, relaxed, from QE's XML (Cr2SeAs)        2.2e-07   <- legitimate
+#   hexagonal, relaxed, from QE's XML (Cr2Se2As)        2.2e-07   <- legitimate
 #   one lattice constant wrong by 16% (MnTe c)         5.2e-06   <- broken
 #
 # A factor of 24 between the worst legitimate case and the broken one is too
@@ -107,7 +107,7 @@ def test_evaluate_inherits_the_guard():
 # The spread has one cause.  A cubic or tetragonal cell carries no sqrt(3), so
 # its Cartesian rotations are exact; a hexagonal cell's C3 is only as orthogonal
 # as its stored b_y approximates (sqrt(3)/2)a.  MnTe's cell is good to 1.8e-11
-# there and Cr2SeAs's only to 2.9e-08 -- that is the whole four orders.  So
+# there and Cr2Se2As's only to 2.9e-08 -- that is the whole four orders.  So
 # "try another material" cannot rescue a threshold: the spread between
 # materials IS the obstacle, and this project's own is at the bad end.
 #
@@ -137,7 +137,7 @@ def test_cr2seas_cartesian_rotations_are_not_exactly_orthogonal():
 
 
 def test_spin_operations_accepts_a_cell_that_is_merely_imprecise():
-    """It must not raise on Cr2SeAs, whatever a tidier material would give."""
+    """It must not raise on Cr2Se2As, whatever a tidier material would give."""
     import spglib
     from altharm.qe.reader import read_structure
     from altharm.symmetry import spin_operations

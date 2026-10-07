@@ -1,4 +1,4 @@
-# Real pw.x output, Cr2SeAs, 304-point circle
+# Real pw.x output, Cr2Se2As, 304-point circle
 
 Bands-only run reusing the same converged 60 Ry density as
 `qe_cr2seas_dense/`, on a circle with twice the points (304, Nyquist l=152).

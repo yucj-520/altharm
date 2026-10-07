@@ -5,7 +5,7 @@ sample count or saturates at a genuine noise level.  P14 makes the question
 answerable without a new run: the floor IS the unresolved tail folded down, so
 an independent measurement of the tail predicts it.
 
-The 56-, 152- and 304-point Cr2SeAs circles share one density (60 Ry, degauss
+The 56-, 152- and 304-point Cr2Se2As circles share one density (60 Ry, degauss
 0.0037), and the 304-point fit resolves l to 151 -- which is exactly the tail
 the shorter circles fold.  Reading the floor only from the channels aliasing
 feeds (l' forbidden, N-l' allowed), as P14.3 requires:
@@ -20,7 +20,7 @@ harmonic ladder -- not a power of N.
 It stops falling where the chi = -1 constraints stop being exact, since those
 are what make a forbidden harmonic forbidden.  On this density chi = -1 is
 0.766 ueV and chi = +1 is 0.072 ueV; the 304-point floor is 1.865 ueV, 2.4x
-above.  Cr2SeAs at 304 points is approaching that crossover, not yet at it.
+above.  Cr2Se2As at 304 points is approaching that crossover, not yet at it.
 """
 
 from pathlib import Path
@@ -39,7 +39,7 @@ ALLOWED = lambda l: l % 6 == 3          # noqa: E731
 
 pytestmark = pytest.mark.skipif(
     not all((d / "data-file-schema.xml").exists() for d in FIX.values()),
-    reason="the 56/152/304-point Cr2SeAs fixtures are not present")
+    reason="the 56/152/304-point Cr2Se2As fixtures are not present")
 
 
 def _fit(n, lmax):

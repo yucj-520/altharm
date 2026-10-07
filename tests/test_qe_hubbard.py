@@ -121,7 +121,7 @@ def test_require_hubbard_refuses_and_says_why():
 CR2SEAS_XML = Path(__file__).parent / "data" / "qe_cr2seas_p3" / "data-file-schema.xml"
 
 
-@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2Se2As fixture not present")
 def test_a_real_pbe_u_run_reports_its_u_in_eV_not_hartree():
     """The regression the bug fix never had.
 
@@ -142,7 +142,7 @@ def test_a_real_pbe_u_run_reports_its_u_in_eV_not_hartree():
         )
 
 
-@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2Se2As fixture not present")
 def test_per_species_entries_do_not_collapse_onto_one_key():
     """The second half of the same bug.
 
@@ -156,13 +156,13 @@ def test_per_species_entries_do_not_collapse_onto_one_key():
     assert set(found) == {"CrU-3d", "CrD-3d"}
 
 
-@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2Se2As fixture not present")
 def test_require_hubbard_accepts_the_matching_expectation():
     found = require_hubbard(CR2SEAS_XML, expected=[("CrU-3d", 3.0), ("CrD-3d", 3.0)])
     assert set(found) == {"CrU-3d", "CrD-3d"}
 
 
-@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2SeAs fixture not present")
+@pytest.mark.skipif(not CR2SEAS_XML.exists(), reason="Cr2Se2As fixture not present")
 def test_require_hubbard_refuses_a_wrong_value_and_a_missing_manifold():
     """Both `expected=` failure branches, which nothing exercised before."""
     with pytest.raises(ValueError, match="expected 4.0 eV"):

@@ -1,12 +1,12 @@
-"""P8, first real system beyond Cr2SeAs: MnTe, and the harmonic ladder to l = 45.
+"""P8, first real system beyond Cr2Se2As: MnTe, and the harmonic ladder to l = 45.
 
 MnTe (NiAs-type, P6_3/mmc, Mn moments along c on alternating layers) is the
-canonical bulk altermagnet, so unlike Cr2SeAs it has a literature classification
+canonical bulk altermagnet, so unlike Cr2Se2As it has a literature classification
 to be checked against rather than only an internal one.
 
 **The symmetry side, before any DFT.** No symprec cliff -- P6_3/mmc with 12
 sublattice-preserving and 12 exchanging operations at every tolerance from 1e-6
-to 1e-2, where Cr2SeAs flips at 1e-5. Allowed set {3, 9, 15, 21, ...}, the odd
+to 1e-2, where Cr2Se2As flips at 1e-5. Allowed set {3, 9, 15, 21, ...}, the odd
 multiples of 3, and **nothing at all at k_z = 0**. That reproduces the textbook
 g-wave form for MnTe, dE ∝ k_z k_x(k_x^2 - 3k_y^2) = k_z k_perp^3 cos(3θ):
 l = 3 in plane, odd in k_z, and four nodal surfaces (three vertical planes plus
@@ -24,18 +24,18 @@ U = 4.0 eV on Mn-3d), band 20 = valence-band maximum:
 floor. Three things make that possible and each is worth separating:
 
 1. MnTe is a **semiconductor**, so the Fermi-surface sampling problem that
-   dominated Cr2SeAs (P3's smearing result) does not arise. Floor 0.02-0.03
-   μeV against Cr2SeAs's 24 μeV -- three orders of magnitude.
+   dominated Cr2Se2As (P3's smearing result) does not arise. Floor 0.02-0.03
+   μeV against Cr2Se2As's 24 μeV -- three orders of magnitude.
 2. Its atoms sit at **exact Wyckoff positions**, so there is no relaxation noise
    breaking the symmetry. The cos/sin ratio at l = 3 is **1e-13 to 4e-12**
-   across both U values and both bands, against **8.6e-10** for relaxed Cr2SeAs
+   across both U values and both bands, against **8.6e-10** for relaxed Cr2Se2As
    at the same l -- 200x to 7000x cleaner. This is the structure-precision trap
    of `test_geometry_precision.py` seen from the good side.
 
-   (An earlier draft of this docstring quoted 5e-4 for Cr2SeAs, which is its
+   (An earlier draft of this docstring quoted 5e-4 for Cr2Se2As, which is its
    *worst* l at U = 2, not its l = 3. Comparing MnTe's l = 3 against another
    system's worst l overstated the gap by six orders of magnitude.)
-3. Its splitting is large: 949 meV at l = 3, against Cr2SeAs's 64 meV.
+3. Its splitting is large: 949 meV at l = 3, against Cr2Se2As's 64 meV.
 
 **Band 20's ladder is exponential in l**: A ∝ exp(-l/6.35), R^2 = 0.997 over
 four decades, fitting better than a power law (R^2 = 0.989). And it passes a
@@ -106,7 +106,7 @@ def _fit(U, band, lmax=LMAX):
 # ------------------------------------------------ the symmetry side, free
 
 def test_mnte_has_no_symprec_cliff():
-    """Where Cr2SeAs flips at 1e-5, MnTe is stable over seven decades."""
+    """Where Cr2Se2As flips at 1e-5, MnTe is stable over seven decades."""
     rows = symprec_scan(CELL, POS, NUM, MAG,
                         symprecs=(1e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2))
     for r in rows:
@@ -146,7 +146,7 @@ def test_the_cosine_channel_is_far_cleaner_than_a_relaxed_structure():
 
     Compared at the SAME l, which a first version of this test did not do: the
     observed MnTe range is 1.2e-13 to 4.0e-12 over both U and both bands, and
-    Cr2SeAs's l = 3 on its reference run is 8.6e-10.  The threshold below is set
+    Cr2Se2As's l = 3 on its reference run is 8.6e-10.  The threshold below is set
     from that measured range rather than from one sample -- the first attempt
     used 1e-12, which the k_z != 0 re-run then exceeded at 1.06e-12.
 
@@ -177,7 +177,7 @@ def test_the_cosine_channel_is_far_cleaner_than_a_relaxed_structure():
 
 @kz025
 def test_a_semiconductor_has_no_fermi_surface_sampling_problem():
-    """Floor 0.02-0.03 ueV, three orders of magnitude below Cr2SeAs's 24 ueV.
+    """Floor 0.02-0.03 ueV, three orders of magnitude below Cr2Se2As's 24 ueV.
 
     Independent support for P3's diagnosis: that trap needed two bands within
     ~130 meV of E_F, and MnTe is gapped.

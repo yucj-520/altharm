@@ -303,7 +303,7 @@ def test_bands_input_writes_every_optional_block_when_asked_for():
 
     Coverage showed these lines never ran: the suite only ever called
     `bands_input` *without* ecutrho/nbnd/occupations/smearing/degauss. The
-    real Cr2SeAs production input used all five, but that input was generated
+    real Cr2Se2As production input used all five, but that input was generated
     by a script, not by a test -- so their formatting was unverified.
     """
     text = bands_input(**_bands_kwargs(

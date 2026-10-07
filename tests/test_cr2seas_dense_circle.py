@@ -23,7 +23,7 @@ REPORT = Path(__file__).parent / "data" / "harmwave_cr2seas" / "harmwave_report.
 
 pytestmark = pytest.mark.skipif(
     not XML.exists() or not REPORT.exists(),
-    reason="the dense-circle Cr2SeAs fixtures are not present",
+    reason="the dense-circle Cr2Se2As fixtures are not present",
 )
 
 BAND0 = 44
