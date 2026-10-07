@@ -647,3 +647,84 @@ def test_the_yz_plane_repeats_it_at_a_different_period():
              for l in range(2, 25, 2)}
     assert shift[8] > 0.3, shift[8]            # 43%
     assert float(np.median(list(shift.values()))) < 0.05
+
+
+# --------------------------------------------------------------------------
+# P14.7, measured: CoF2 at a sample count coprime to its period
+# --------------------------------------------------------------------------
+#
+# CoF2's allowed set is l = 2, 6, 10, 14 -- period 4 -- and the published runs
+# used 152 points, which 4 divides, so they have been at m = 1 all along.  The
+# claim was that this did them no harm because the damage is proportional to
+# the unresolved tail and CoF2 barely has one.  Job 20813368 tests it: N = 151
+# is coprime to 4, hence m = 4, the safest sampling at that period.  Same
+# density, same circle, only the count changed.
+#
+#     l    N=152 (m=1)    N=151 (m=4)    difference
+#     2    46.67131 meV   46.67130 meV     +0.000%
+#     6     0.00999        0.00999         +0.034%
+#    10     0.00469        0.00468         +0.241%
+#    14     0.00000        0.00001        -78%      <- DO NOT QUOTE
+#
+# l = 14 is 1.9 neV and 8.8 neV against a floor of 35.3 neV -- 18x and 4x BELOW
+# the floor, so that 78% compares two numbers neither run can resolve.
+# Excluding it, the meaningful coefficients agree to 0.034% median, 0.241%
+# worst.
+#
+# Cr2Se2As at the same contrast moves 2.18% median and 10.00% worst (P14.8), so
+# CoF2 is ~40x less affected.  The rule holds from the protected side too:
+# P8's CoF2 numbers stand, and they stand because CoF2 has no tail -- not
+# because the sample count was chosen well.
+
+COF2_151 = DATA / "cof2_n151" / "data-file-schema.xml"
+COF2_152 = DATA / "cof2_u0_kz025" / "data-file-schema.xml"
+COF2_ALLOWED = (2, 6, 10, 14)
+COF2_VBM = 30
+
+
+def _cof2_fit(xml, lmax=20):
+    from altharm import CircularBasis, noise_report, project
+    from altharm.qe.reader import read_bands
+    q = read_bands(xml)
+    k = q.kpoints_tpiba
+    th = np.arctan2(k[:, 1], k[:, 0])
+    rad = np.linalg.norm(k[0][:2])
+    kz = k[0, 2]
+    dirs = np.stack([np.cos(th), np.sin(th), (kz / rad) * np.ones_like(th)], axis=1)
+    f = project(CircularBasis(lmax), dirs,
+                q.energies_ev[0, :, COF2_VBM] - q.energies_ev[1, :, COF2_VBM])
+    return f.amplitude_by_l(), noise_report(f, set(COF2_ALLOWED)).floor
+
+
+cof2_missing = not (COF2_151.exists() and COF2_152.exists())
+
+
+@pytest.mark.skipif(cof2_missing, reason="the CoF2 N=151 fixture is not present")
+def test_cof2_152_is_m_one_and_151_is_the_safest_available():
+    assert allowed_period(COF2_ALLOWED) == 4
+    assert alias_order(152, 4) == 1
+    assert alias_order(151, 4) == 4
+
+
+@pytest.mark.skipif(cof2_missing, reason="the CoF2 N=151 fixture is not present")
+def test_cof2_is_protected_by_having_no_tail():
+    """Same m=1 contrast that moves Cr2Se2As 2.18%; CoF2 barely notices."""
+    a152, floor = _cof2_fit(COF2_152)
+    a151, _ = _cof2_fit(COF2_151)
+    # only coefficients that are actually above the floor
+    usable = [l for l in COF2_ALLOWED if min(a152[l], a151[l]) > floor]
+    assert set(usable) == {2, 6, 10}, usable
+    shifts = [abs(a152[l] - a151[l]) / a151[l] for l in usable]
+    assert float(np.median(shifts)) < 0.005, shifts      # 0.034%
+    assert max(shifts) < 0.01, shifts                    # 0.241%
+
+
+@pytest.mark.skipif(cof2_missing, reason="the CoF2 N=151 fixture is not present")
+def test_the_sub_floor_harmonic_must_not_be_quoted():
+    """l=14 differs by 78% between the two runs and is under the floor in
+    both -- 18x under at N=152, 4x at N=151 -- so the number means nothing."""
+    a152, floor = _cof2_fit(COF2_152)
+    a151, _ = _cof2_fit(COF2_151)
+    assert a152[14] < floor, (a152[14], floor)
+    assert a151[14] < floor, (a151[14], floor)
+    assert abs(a152[14] - a151[14]) / a151[14] > 0.5     # the misleading 78%

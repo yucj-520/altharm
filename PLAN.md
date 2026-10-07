@@ -27,10 +27,19 @@ independent of the object it integrates.
 grid up to $l=3$. **`CircularBasis` is not** — its Gram matrix under $\int_0^{2\pi}$ came out
 $\mathrm{diag}(2\pi,\ \pi,\pi,\ \pi,\pi,\ \pi,\pi)$ for $l=(0,1,1,2,2,3,3)$ on a
 200001-point trapezoidal grid (off-diagonal below $3\times10^{-5}$). It is orthogonal, not
-orthonormal: the module docstring's claim holds for the spherical basis only. **Open:** either
-rescale `CircularBasis.evaluate` by $1/\sqrt{2\pi}$ at $l=0$ and $1/\sqrt\pi$ at $l\geq1$, or
-narrow the docstring's claim to "orthogonal" — and whichever is chosen, P2's projection step
-must not assume unit norm from this basis until it's settled.
+orthonormal: the module docstring's claim holds for the spherical basis only.
+
+**Closed 2026-10-07, by the second option.** `basis.py`'s module docstring now states that the
+circular basis is "orthogonal on a uniform circle but **not normalised** -- the Gram matrix over
+N sample points is diag(N, N/2, N/2, ...), not the identity", and warns that anything comparing a
+circular coefficient with a spherical one must not assume otherwise. `CircularBasis.evaluate`
+was *not* rescaled, which keeps the coefficients in the units people expect (a_l in eV, directly
+the amplitude of cos(l θ)).
+
+The projection step is safe by construction rather than by convention: `project` uses
+`np.linalg.lstsq`, which is invariant under any scaling of the basis. **Verified** by scaling
+the whole basis by 7 and refitting -- the reconstructed function agrees to 7.1e-15 while the
+coefficients differ by exactly 7.000. So no part of the pipeline assumes unit norm.
 
 ## P1 — Symmetry projector
 
@@ -1281,8 +1290,26 @@ Two consequences:
    whose second harmonic is 66% of its first, is precisely the kind of material this project
    exists to study, and precisely the kind $m=1$ would destroy.
 
-**Corollary for P8:** CoF2's numbers stand, but its sample count was lucky rather than chosen.
-Confirming them would want a rerun at $N$ coprime to 4.
+**Corollary for P8, now measured** (job 20813368, 2026-10-07). CoF2 rerun at $N = 151$, which is
+coprime to 4 and so sits at $m = 4$, the safest sampling available at that period -- same
+density, same circle, only the count changed:
+
+| $l$ | $N$=152 ($m$=1) | $N$=151 ($m$=4) | difference |
+|---|---|---|---|
+| 2 (leading) | 46.67131 meV | 46.67130 meV | **+0.000%** |
+| 6 | 0.00999 | 0.00999 | +0.034% |
+| 10 | 0.00469 | 0.00468 | +0.241% |
+| ~~14~~ | ~~0.00000~~ | ~~0.00001~~ | ~~−78%~~ |
+
+**$l=14$ must not be quoted**: the two values are 1.9 neV and 8.8 neV against a floor of
+35.3 neV -- 18× and 4× *below* the floor, so that 78% compares two numbers neither run can
+resolve. Excluding
+it, the meaningful coefficients agree to **0.034% median, 0.241% worst**.
+
+Against Cr2Se2As at the same contrast (2.18% median, 10.00% worst, P14.8), CoF2 is roughly
+**40× less affected**. So "the damage is proportional to the unresolved tail" holds on real
+data, from the protected side as well as the exposed one: **P8's CoF2 numbers stand, and the
+reason they stand is that CoF2 has no tail, not that the sample count was chosen well.**
 
 ---
 
@@ -1642,5 +1669,27 @@ correct. Two readings are consistent with everything measured:
 Nothing here decides between them -- that needs a comparison against something external, which
 this project does not have. **What it does establish is that the choice does not threaten the
 conclusions, only the numbers.**
+
+### The decision: $U = 3.0$ eV (2026-10-07)
+
+**Taken by the project owner, not derived here.** All reference values stay at $U = 3.0$ eV and
+the published coefficients stand as they are.
+
+This is a choice, and the record should not be read as saying 3.0 was validated. What is
+established is:
+
+- The linear-response value is **6.39 eV**, a factor of 2.13 away, with the reservations in P19
+  (2×2×1 q-mesh, `conv_thr_chi` loosened to 1e-4).
+- Had 6.39 been adopted instead, every absolute coefficient would move by a **median of −57.8%**
+  (P19b) -- the leading harmonic halves, the weakest drops sixfold.
+- **The conclusions are unaffected either way.** The next/leading ratio varies 1.5 percentage
+  points over $U$ = 2 … 6.39, so P8's headline -- the high-harmonic physics is in Cr2Se2As, not
+  in the canonical altermagnets -- holds at any $U$ in that range, as does the resolution of all
+  eight allowed harmonics.
+
+So the honest form of any statement built on these numbers is: *at $U = 3.0$ eV*, the
+coefficients are X; the ratios are robust to $U$; a linear-response treatment would give
+substantially smaller absolute values. P19 and P19b exist so that sentence can be written
+without hand-waving.
 
 Fixture: `tests/data/qe_cr2seas_u64/`. Tests: `tests/test_p19b_u_extended.py`.
