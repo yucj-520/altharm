@@ -1762,3 +1762,76 @@ cost, and worth doing only if the 3D amplitudes are wanted for their own sake ra
 the symmetry statement, which is already settled.
 
 Fixture: `tests/data/sphere/`. Tests: `tests/test_p20_spherical_route.py`.
+
+---
+
+## P21 — a 90° twist turns CrPS4 from nodal into a d-wave altermagnet (symmetry only)
+
+**Symmetry, not amplitude.** This phase uses only `altharm.symmetry`; no DFT was run, and none of
+what follows says how *large* any splitting is. It is here because the symmetry question is the
+one that decides whether a DFT run is worth its cost, and in this case it is decisive.
+
+### The monolayer is nodal in-plane, in every magnetic configuration tried
+
+CrPS4 (monoclinic, $a = 10.88896$, $b = 7.334202$, $c = 6.66998626$ Å, $\beta = 91.953°$, 24
+atoms, structure supplied by the project owner). All four Cr sit at $z = 0$, so the cell holds
+one layer. Their positions pair up two ways: Cr0↔Cr2 and Cr1↔Cr3 by the $(\tfrac12,\tfrac12,0)$
+translation, Cr0↔Cr1 by $y \to -y$.
+
+On a $k_z = 0$ in-plane circle:
+
+| configuration | ops | $\chi=-1$ | allowed $l$ |
+|---|---|---|---|
+| FM (all up) | 8 | 0 | 0, 2, 4, 6, 8, 10, 12 |
+| AFM, Cr0,2 ↑ / Cr1,3 ↓ ($y\to-y$ pairing) | 12 | 6 | **empty** |
+| AFM, Cr0,1 ↑ / Cr2,3 ↓ ($\tfrac12\tfrac12$ pairing) | 8 | 4 | **empty** |
+| AFM, Cr0,3 ↑ / Cr1,2 ↓ | 8 | 4 | **empty** |
+
+Every antiferromagnetic arrangement is **nodal in the plane**. The cause is the $M_z$ mirror:
+with all Cr at $z=0$ it is a symmetry of the lattice, and under sublattice exchange it carries
+$\chi = -1$, which forces $\Delta E(k_x,k_y,0) = -\Delta E(k_x,k_y,0) = 0$. So there is no
+in-plane altermagnetic splitting to analyse in a CrPS4 monolayer.
+
+### The 90° twist removes exactly that mirror
+
+Commensuration: $a/b = 1.4847$, so $2a \approx 3b$ (21.78 vs 22.00 Å, 1.03% mismatch). The
+smallest square supercell is 21.890 Å on a side, with each layer strained anisotropically by
+$\pm 0.5\%$ to fit it exactly — an idealisation, since a real twisted bilayer is a moiré and not
+strictly periodic. 288 atoms.
+
+| bilayer | ops | $\chi=-1$ | allowed $l$ at $k_z=0$ |
+|---|---|---|---|
+| untwisted, both layers same configuration | 52 | 26 | **empty** |
+| **90° twist, both layers same configuration** | — | — | **no sublattice-exchanging operation exists at all** |
+| **90° twist, layer 2 spins reversed** | 4 | 2 | **2, 4, 6, 8, 10, 12** |
+
+**The twist opens the in-plane splitting, and the leading harmonic is $l = 2$ -- d-wave.**
+
+**The spin reversal is not optional.** With both layers in the same configuration the twisted
+structure has *no* operation of the non-magnetic parent that exchanges the two sublattices, so
+it is not an altermagnet at all -- it is a compensated magnet of some other kind. That is a
+design rule, not a detail.
+
+**Robust against the tolerance**, which matters because Cr2Se2As taught this project that
+`symprec` can decide whether altermagnetism is seen at all: scanning $10^{-4}$ to $10^{-1}$
+gives 4 operations, 2 of them $\chi=-1$, and the same allowed set at every value. No cliff.
+
+### Why no DFT, and what it would take
+
+The 288-atom supercell is out of reach: calibrated on this project's own 10-atom runs
+(30 min for SCF + a 151-point circle on 16 cores), 288 atoms is 200–800× the work, i.e. roughly
+100–400 hours for one bands run, which also will not fit a two-day walltime. Two routes are
+cheaper than brute force:
+
+1. **Tight-binding from monolayer Wannier functions.** P10 established that the high harmonics
+   come from level repulsion and that a short-range model reproduces them (~15 Å for Cr2Se2As).
+   Building the twisted bilayer from a monolayer `hr.dat` costs orders of magnitude less.
+2. **Pick a material with $a \approx b$**, where a 90° twist is commensurate in the primitive
+   cell and needs no supercell. CrPS4's $a/b = 1.48$ is the whole reason it is expensive.
+
+**One assumption is not verified**: which intralayer magnetic order is the ground state. CrPS4
+is usually described with ferromagnetic layers coupled antiferromagnetically, in which case the
+monolayer is a ferromagnet and the configurations above are not its ground state. Everything in
+this phase is conditional on the configuration being realisable.
+
+Tests: `tests/test_p21_crps4_twist.py`.
