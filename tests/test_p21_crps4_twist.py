@@ -160,3 +160,69 @@ def test_the_result_has_no_symprec_cliff(symprec):
         _bilayer(90.0, AFM_A, [-s for s in AFM_A]), symprec)
     assert al == [2, 4, 6, 8, 10, 12], (symprec, al)
     assert len(ops) == 4
+
+
+# --------------------------------------------------------------------------
+# The d-wave claim, proved rather than asserted
+# --------------------------------------------------------------------------
+#
+# "l = 2 is allowed" is weaker than the claim deserves.  The projector gives the
+# allowed DIRECTION inside each l block, and three independent criteria agree:
+#
+#   leading form     l=2 block is pure cosine (sine component 0) -> cos(2 theta)
+#   which quadratic  corr with k_x^2 - k_y^2 = 1.0000000000;
+#                    with k_x k_y = 0.0000000000
+#   nodal surfaces   four zeros at 45/135/225/315 deg -> two vertical planes,
+#                    which is the definition of d-wave
+#   spherical index  k_x^2 - k_y^2 expands to exactly Y_2^2, residual 1.2e-16
+#
+# The ladder alternates by symmetry too: l = 2, 6, 10 pure cosine and
+# l = 4, 8, 12 pure sine.
+
+from altharm import SphericalBasis, allowed_harmonics, project, sphere_grid
+
+
+def _blocks():
+    cell, frac, nums, mag = _bilayer(90.0, AFM_A, [-s for s in AFM_A])
+    ops = spin_operations(cell, frac, nums, mag, symprec=5e-2)
+    return allowed_harmonics(CircularBasis(12), ops, INPLANE)
+
+
+def test_the_leading_block_is_pure_cosine():
+    v = _blocks()[2][0]
+    assert abs(abs(v[0]) - 1.0) < 1e-6, v      # cosine component
+    assert abs(v[1]) < 1e-8, v                 # no sine
+
+
+def test_the_ladder_alternates_cosine_and_sine():
+    blocks = _blocks()
+    for l in (2, 6, 10):
+        assert abs(blocks[l][0][1]) < 1e-8, l   # pure cosine
+    for l in (4, 8, 12):
+        assert abs(blocks[l][0][0]) < 1e-8, l   # pure sine
+
+
+def test_the_leading_term_is_kx2_minus_ky2_not_kxky():
+    th = np.linspace(0, 2 * np.pi, 2001, endpoint=False)
+    f2 = np.cos(2 * th)
+    kx, ky = np.cos(th), np.sin(th)
+    assert abs(abs(np.corrcoef(f2, kx ** 2 - ky ** 2)[0, 1]) - 1.0) < 1e-9
+    assert abs(np.corrcoef(f2, kx * ky)[0, 1]) < 1e-9
+
+
+def test_it_has_exactly_two_vertical_nodal_planes():
+    th = np.linspace(0, 2 * np.pi, 2001, endpoint=False)
+    zeros = np.where(np.diff(np.sign(np.cos(2 * th))) != 0)[0]
+    assert len(zeros) == 4                      # four sign changes
+    assert len(zeros) // 2 == 2                 # two planes -> d-wave
+
+
+def test_the_spherical_index_is_also_two():
+    """The 'd' of s/p/d, confirming the label in the other basis."""
+    pts, w = sphere_grid(40, 80, radius=1.0)
+    d = pts / np.linalg.norm(pts, axis=1, keepdims=True)
+    form = d[:, 0] ** 2 - d[:, 1] ** 2
+    fit = project(SphericalBasis(6), d, form, weights=w)
+    big = [(l, m) for (l, m), c in zip(fit.labels, fit.coeffs) if abs(c) > 1e-6]
+    assert big == [(2, 2)], big
+    assert fit.residual_rms / np.sqrt((form ** 2).mean()) < 1e-14

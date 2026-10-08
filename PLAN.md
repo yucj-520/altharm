@@ -1787,10 +1787,28 @@ On a $k_z = 0$ in-plane circle:
 | AFM, Cr0,1 ↑ / Cr2,3 ↓ ($\tfrac12\tfrac12$ pairing) | 8 | 4 | **empty** |
 | AFM, Cr0,3 ↑ / Cr1,2 ↓ | 8 | 4 | **empty** |
 
-Every antiferromagnetic arrangement is **nodal in the plane**. The cause is the $M_z$ mirror:
-with all Cr at $z=0$ it is a symmetry of the lattice, and under sublattice exchange it carries
-$\chi = -1$, which forces $\Delta E(k_x,k_y,0) = -\Delta E(k_x,k_y,0) = 0$. So there is no
-in-plane altermagnetic splitting to analyse in a CrPS4 monolayer.
+Every antiferromagnetic arrangement gives an **empty allowed set**, and the obstruction is
+worse than a nodal plane: **the splitting is zero everywhere in the Brillouin zone.**
+
+Moving the circle off $k_z = 0$ -- which is exactly what rescues Cr2Se2As -- does not help.
+Measured on circles at $k_z = 0$, $0.25b_3$ and $0.5b_3$: empty at all three. The reason is the
+*kind* of operation involved:
+
+| | the $\chi=-1$ operation | its action on $\mathbf k$ | consequence |
+|---|---|---|---|
+| Cr2Se2As | mirror $M_z$ | $k_z \to -k_z$ | self-maps only the $k_z=0$ plane, so splitting survives at $k_z \neq 0$ |
+| CrPS4 (AFM-A, C) | **inversion** | $\mathbf k \to -\mathbf k$ | self-maps *every* $\mathbf k$ |
+| CrPS4 (AFM-B) | **pure translation** $(\tfrac12,\tfrac12,0)$ | $\mathbf k \to \mathbf k$ | self-maps *every* $\mathbf k$ |
+
+Since $\Delta E$ is even in $\mathbf k$ under time reversal, both cases give
+$\Delta E(\mathbf k) = -\Delta E(\mathbf k) = 0$ for all $\mathbf k$. Verified on 2000 random
+directions: $|R\mathbf k + \mathbf k|_{\max} = 1.1\times10^{-16}$ for the inversion and
+$|R\mathbf k - \mathbf k|_{\max} = 1.1\times10^{-16}$ for the translation.
+
+**So CrPS4 in these configurations is a conventional antiferromagnet, not an altermagnet** --
+spin-degenerate throughout, with no harmonics to analyse on any circle. That is the diagnostic
+worth keeping: a $\chi=-1$ operation that is a translation or an inversion kills the splitting
+globally, while a $\chi=-1$ mirror or rotation only kills it on the surface it fixes.
 
 ### The 90° twist removes exactly that mirror
 
@@ -1805,7 +1823,27 @@ strictly periodic. 288 atoms.
 | **90° twist, both layers same configuration** | — | — | **no sublattice-exchanging operation exists at all** |
 | **90° twist, layer 2 spins reversed** | 4 | 2 | **2, 4, 6, 8, 10, 12** |
 
-**The twist opens the in-plane splitting, and the leading harmonic is $l = 2$ -- d-wave.**
+**The twist opens the in-plane splitting, and the leading harmonic is $l = 2$.**
+
+### It is specifically $d_{x^2-y^2}$, by three independent criteria
+
+"$l=2$ is allowed" is weaker than the claim deserves. The projector gives the allowed *direction*
+within each $l$ block, and all three standard criteria for a d-wave agree:
+
+| criterion | result |
+|---|---|
+| leading term's form | $l=2$ block is **pure cosine** (sine component $0$), i.e. $\cos 2\theta$ |
+| which quadratic | correlation with $k_x^2-k_y^2$ is **1.0000000000**; with $k_xk_y$ it is **0.0000000000** |
+| nodal surfaces | four zeros on $[0,2\pi)$ at 45°, 135°, 225°, 315° → **two vertical nodal planes**, which is the definition of d-wave |
+| spherical index | $k_x^2-k_y^2$ expands to **exactly one term, $Y_2^2$**, relative residual $1.2\times10^{-16}$ → $l=2$, the "d" of s/p/d |
+
+So the splitting's functional form is fixed to $d_{x^2-y^2}$, not merely "something with $l=2$ in
+it". The whole ladder alternates by symmetry as well: $l = 2, 6, 10$ pure cosine and
+$l = 4, 8, 12$ pure sine.
+
+Note this is the same basis distinction P20 settled for the g-wave case: the spherical index and
+the circular index agree here ($l=2$ both ways) only because the d-wave form carries no $k_z$
+factor -- for CrPS4's twisted bilayer the splitting lives in the plane.
 
 **The spin reversal is not optional.** With both layers in the same configuration the twisted
 structure has *no* operation of the non-magnetic parent that exchanges the two sublattices, so
@@ -1835,3 +1873,59 @@ monolayer is a ferromagnet and the configurations above are not its ground state
 this phase is conditional on the configuration being realisable.
 
 Tests: `tests/test_p21_crps4_twist.py`.
+
+---
+
+## P22 — Cr2S2Sb: the multi-harmonic character is structural, and my explanation for it was wrong
+
+Two questions, one run. Job 20820707: Cr2S2Sb, the sister compound of Cr2Se2As -- same structure
+type (4 Cr + 4 chalcogen + 2 pnictogen, same Wyckoff pattern), different chemistry. Structure
+taken from the group's own tree. Settings identical to P12's Cr2Se2As runs (12×12×4,
+`ecutwfc` 60, $U = 3.0$ ortho-atomic) except two deliberate improvements from this project's own
+findings: `degauss` **0.0150** rather than the author's 0.0037 (P3), and **$N = 151$** rather
+than 152, coprime to the allowed-set period (P14).
+
+SCF converged in 25 iterations, $|M| = 15.70\ \mu_B$ against Cr2Se2As's 15.95 -- close, as the
+sister compound should be.
+
+### It is a semiconductor, and still multi-harmonic
+
+No band crosses $E_F$: bands 53 ($-0.56$ eV) and 54 ($+0.27$ eV) straddle it with a 712 meV gap.
+Cr2Se2As is metallic, with bands 43/44 inside $\pm130$ meV of $E_F$.
+
+The allowed set is **[3, 9, 15, 21, 27, 33, 39, 45] -- identical to Cr2Se2As**, as the shared
+structure requires.
+
+| band | $E-E_F$ | $l=3$ | $l=9$ | next/leading |
+|---|---|---|---|---|
+| 53 (VBM) | −0.561 eV | 20.415 meV | 9.112 | **44.63%** |
+| 54 (CBM) | +0.274 eV | 2.537 meV | 2.698 | **106.35%** ($l=9$ *exceeds* $l=3$) |
+
+**So the multi-harmonic character is a property of this structure type, not of Cr2Se2As.** That
+is what the run was built to decide, and it strengthens P8's framing: the high-harmonic physics
+lives in the Cr2X2Y family rather than in the canonical altermagnets.
+
+### And it falsifies the mechanism I had been offering
+
+Answering "why is MnTe nearly single-harmonic?" I had proposed that harmonic richness tracks how
+close the band sits to its neighbours along the circle -- avoided crossings make sharp features
+in $\theta$, which is P10's mechanism. Cr2S2Sb tests that across four materials:
+
+| material (band) | nearest-neighbour gap | next/leading |
+|---|---|---|
+| Cr2Se2As (44) | 20.1 meV | 67.58% |
+| **CoF2 (30)** | **92.0 meV** | **0.02%** |
+| Cr2S2Sb (54) | 96.1 meV | 106.35% |
+| Cr2S2Sb (53) | 112.6 meV | 44.63% |
+| MnTe (20) | 388.3 meV | 5.63% |
+
+**Not monotone; log-log correlation −0.22.** CoF2's gap is *smaller* than either Cr2S2Sb band's
+and its harmonic content is two thousand times lower. The single-number explanation does not
+survive.
+
+What the data actually group by is **structure type**: the Cr2X2Y family runs 44–106%, rutile
+CoF2 is 0.02%, NiAs MnTe is 5.63%. P10's mechanism (level repulsion generates the harmonics)
+stands -- it was measured on Cr2Se2As -- but **the claim that neighbour spacing predicts richness
+across materials is withdrawn.** Four points cannot support it, and they contradict it.
+
+Fixture: `tests/data/crssb/`. Tests: `tests/test_p22_crssb.py`.
