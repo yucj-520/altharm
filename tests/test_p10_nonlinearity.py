@@ -1,8 +1,8 @@
 """P10: the high harmonics are made by band repulsion, not by long-range hopping.
 
-This settles the question that motivated the whole DFT route -- the supervisor's
-worry that "there were some terms that are not captured by the Wannier".  The
-worry is well founded *for a linear response*: expand a plane wave on a circle
+This addresses the question that motivated the DFT route: whether a Wannier
+model omits terms that are present in the underlying DFT calculation.  The
+concern is well founded *for a linear response*: expand a plane wave on a circle
 of radius k0,
 
     e^{i k.R} = sum_l i^l J_l(k0 |R_parallel|) e^{i l (theta - phi_R)},
@@ -10,7 +10,7 @@ of radius k0,
 so any quantity LINEAR in H(R) has its l-th harmonic weighted by J_l(k0 |R|),
 which is exponentially small until k0|R| ~ l.  For Cr2Se2As, k0 = 0.4868 1/Ang,
 so l = 45 would need hoppings out to ~92 Ang -- 25 unit cells.  No Wannier model
-reaches that, and the group's reaches 25.8 Ang.
+reaches that; the Cr2Se2As model used here reaches 25.8 Ang.
 
 But dE(k) is an EIGENVALUE, not a matrix element, and eigenvalues are not linear
 in H.  Level repulsion at avoided crossings is a sharp feature in theta, and a

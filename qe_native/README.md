@@ -8,8 +8,8 @@ without ever touching an XML file by hand:
 
 1. **The magnetic character of every symmetry operation.** The two (or more)
    magnetic sublattices are collapsed back to their true chemical species
-   (read from the pseudopotential's own `psd` field, not from `ityp` — this
-   group's convention gives each sublattice its own `ATOMIC_SPECIES` entry so
+   (read from the pseudopotential's own `psd` field, not from `ityp` — the
+   convention used here gives each sublattice its own `ATOMIC_SPECIES` entry so
    LSDA can start them with opposite `starting_magnetization`, and QE's
    `find_sym()` would otherwise never let an operation map one onto the
    other). QE's own symmetry finder is called on that collapsed structure;
@@ -59,24 +59,26 @@ operation set first, filtering for the circle's plane second (see the
 
 ## Status
 
-Validated once, on the group's real Cr2Se2As run (PBE+U, USPP, 56-point
-circle at k_z = 0.25 b3, band 44 -- the one nearest E_F, at E-E_F = +0.04 eV):
-eigenvalues agree with the Python XML route to 1e-9 eV, the fitted
-coefficients agree to 1e-9 eV coefficient-by-coefficient, and the operation
-list — fed into `altharm.symmetry` — reproduces the {3, 9} selection rule
-exactly where the real signal is (l=3: 59.13 meV, l=9: 38.86 meV, agreeing
-with the group's independent Wannier fit to under 1%). See
-`tests/test_harmwave_cross_check.py` and `tests/data/harmwave_cr2seas/`.
+Validated on the production Cr2Se2As calculation (PBE+U, USPP, 56-point
+circle at k_z = 0.25 b3, band 44, i.e. the band nearest E_F, at
+E-E_F = +0.04 eV): the eigenvalues agree with the Python XML route to within
+1e-9 eV, the fitted coefficients agree to within 1e-9 eV coefficient by
+coefficient, and the operation list, when passed to `altharm.symmetry`,
+reproduces the {3, 9} selection rule exactly where the physical signal lies
+(l=3: 59.13 meV, l=9: 38.86 meV, in agreement with the independent Wannier fit
+to within 1%). See `tests/test_harmwave_cross_check.py` and
+`tests/data/harmwave_cr2seas/`.
 
-A first run of this validation used band index 22 by mistake -- copied from
-the Wannier route's 38-band numbering, where 22 *is* the band nearest E_F,
-but this DFT run has 80 bands (22 more, matching the group's own "16
-semicore + 6 Se/As-4s" comment in `nscf.in`), so band 22 here is a
-dispersionless semicore state 4.4 eV below E_F. Caught by checking the
-band's mean energy against E_F, which is worth doing on every new
-`band_index` rather than assumed from a different model's numbering.
+The first run of this validation used band index 22 in error. This index was
+taken from the 38-band numbering of the Wannier route, in which band 22 is
+indeed the band nearest E_F; the DFT calculation, however, has 80 bands (22
+additional bands, consistent with the "16 semicore + 6 Se/As-4s" comment in
+`nscf.in`), so band 22 there is a dispersionless semicore state 4.4 eV below
+E_F. The error was detected by comparing the mean energy of the band with E_F.
+This check should be performed for every new `band_index`, rather than
+assuming that the band numbering of a different model applies.
 
-**Scope of this v1, honestly:** collinear LSDA only (no SOC, no
+**Scope of version 1:** collinear LSDA only (no SOC, no
 noncollinear); the circle must lie in the k_x k_y plane at a fixed k_z
 (hardcoded, not general); the band index is given explicitly rather than
 tracked across k-points (see `altharm.bandtrack` for why that matters and
