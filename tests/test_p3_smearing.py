@@ -18,7 +18,7 @@ The last three agree to ~1%; the production one is 8% below them.  Since the two
 24x24x8 runs differ by only 0.1% although their smearing differs 4x, the
 smearing's own bias is negligible there and 64.3 meV is the converged value.
 
-**Consequence for the group's setup:** 12x12x4 at degauss 0.0037 underestimates
+**Consequence for our setup:** 12x12x4 at degauss 0.0037 underestimates
 l=3 by 8% and the weak harmonics by up to 27%.  The cheap fix is degauss = 0.015
 at the same mesh, which lands within 1-2% of converged.
 """
@@ -121,7 +121,7 @@ def test_three_settings_agree_so_the_converged_value_is_known(runs):
 
 
 def test_the_production_setting_is_the_outlier(runs):
-    """What this costs the group: 8% on l=3, more on the weak harmonics."""
+    """What this costs: 8% on l=3, more on the weak harmonics."""
     prod = runs[("small", 12)][0]
     conv = runs[("wide", 24)][0]
     assert abs(conv[3] - prod[3]) / prod[3] == pytest.approx(0.087, abs=0.02)

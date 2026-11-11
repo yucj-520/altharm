@@ -28,7 +28,7 @@ sin2θ and 0.00% of cos2θ.
 part. Its ladder on band 30 at k_z = 0 is 122.5 / 0.021 / 0.0014 / 0.00004 meV
 for l = 2, 6, 10, 14: the second allowed harmonic is **0.021%** of the first.
 Against MnTe's 5.6% and Cr2Se2As's 67.6%. So of the three, the two canonical
-altermagnets are essentially single-wave and **the group's own Cr2Se2As is the
+altermagnets are essentially single-wave and **our own Cr2Se2As is the
 one with genuinely multi-harmonic structure** -- l = 9 at two thirds of l = 3.
 That is where the "high harmonic part would be genuinely new" lives.
 
@@ -160,7 +160,7 @@ def test_high_harmonic_richness_spans_three_orders_across_the_three_systems():
       MnTe    5.6e-2   (l=9 / l=3)
       Cr2Se2As 6.8e-1   (l=9 / l=3)
 
-    The two canonical altermagnets are essentially single-wave; the group's own
+    The two canonical altermagnets are essentially single-wave; our own
     material is the multi-harmonic one.  Note CoF2's set steps by 4 rather than
     6, and a shorter step should decay LESS, so its ratio is if anything
     understated relative to the others.

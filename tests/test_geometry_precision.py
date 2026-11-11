@@ -103,7 +103,7 @@ from altharm.symmetry import (
 HERE = Path(__file__).parent
 
 # ------------------------------------------------------------------ the structure
-# The group's relaxed Cr2Se2As cell, exactly as it goes into scf.in.
+# Our relaxed Cr2Se2As cell, exactly as it goes into scf.in.
 CELL = np.array([
     [3.7258396285, 0.0000002055, 0.0000000080],
     [-1.8629196361, 3.2266718606, -0.0000000204],

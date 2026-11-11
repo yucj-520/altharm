@@ -1,4 +1,4 @@
-"""Regression on the group's real Cr2Se2As Wannier model.
+"""Regression on our real Cr2Se2As Wannier model.
 
 Independence rule, in its strongest form here: the symmetry module predicts
 which harmonics may be non-zero from the structure alone, and the Wannier
@@ -196,9 +196,9 @@ def test_p3_noise_floor_on_the_real_frozen_density_run():
     """The headline number of the whole project -- corrected once already.
 
     **This test replaces an earlier version that measured band index 22.**
-    That was wrong: it is the band nearest E_F in the group's Wannier model,
+    That was wrong: it is the band nearest E_F in our Wannier model,
     which has 38 bands, but this DFT run has 80 (16 semicore + 6 Se/As-4s +
-    38 p-d + 20 buffer, per the group's own nscf.in comment), so band 22
+    38 p-d + 20 buffer, per our own nscf.in comment), so band 22
     there is a deep, nearly flat semicore state 4.4 eV below E_F -- not the
     band the project cares about, and its splitting is trivially near zero,
     which is why the noise floor measured on it looked spectacular (0.106

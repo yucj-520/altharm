@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "altharm: angular harmonics of the altermagnetic spin splitting, directly from plane-wave DFT"
+type: software
+authors:
+  - family-names: Yu
+    given-names: Cuiju
+    affiliation: Aalto University
+version: 0.1.0
+date-released: 2026-11-11
+license: GPL-3.0-or-later
+repository-code: "https://github.com/yucj-520/altharm"

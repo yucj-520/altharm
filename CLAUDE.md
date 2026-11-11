@@ -54,8 +54,8 @@ Two consequences that are easy to skip past:
 
 `altharm` fits the angular harmonics of an altermagnet's spin splitting $\Delta E(\mathbf k) =
 \varepsilon_\uparrow(\mathbf k) - \varepsilon_\downarrow(\mathbf k)$ directly from plane-wave
-DFT, on a circle (2D) or a sphere (3D) in k-space, and cross-checks the result against the
-group's existing Wannier route and against defumat. `README.md` has the physics and the
+DFT, on a circle (2D) or a sphere (3D) in k-space, and cross-checks the result against our
+existing Wannier route and against defumat. `README.md` has the physics and the
 organising idea — **fit every $l$ up to $l_\mathrm{max}$, not only the symmetry-allowed ones,
 because the forbidden ones measure the calculation's own noise floor.** Read it before
 touching the fitting or symmetry code; nothing here restates it.
@@ -63,15 +63,15 @@ touching the fitting or symmetry code; nothing here restates it.
 **Status**, honestly: `altharm/units.py`, `basis.py`, `symmetry.py`, `kpath.py`,
 `project.py`, `noise.py`, `bandtrack.py`, `planewaves.py`, `wannier.py` and `qe/` (writer +
 reader) are written and tested (99 tests). The QE route has been run for real, twice: bcc iron
-(interface validation) and the group's Cr2SeAs PBE+U structure (production). On Cr2SeAs, P3's
+(interface validation) and our Cr2SeAs PBE+U structure (production). On Cr2SeAs, P3's
 noise floor is measured at 0.106 μeV RMS over the forbidden harmonics — about five orders of
-magnitude below the ~9 meV the group measured re-converging self-consistently on a k-mesh —
+magnitude below the ~9 meV we measured re-converging self-consistently on a k-mesh —
 and P4 has a physical account of where the residual concentrates (the plane-wave count's own
 angular spectrum peaks at the same $l$ the noise floor does). A second, independent
 implementation exists too: `qe_native/harmwave.f90`, a new compiled QE executable (linked
 against `PW/src`/`PP/src`, using QE's own `find_sym()` and LAPACK directly, no XML, no
 spglib, no numpy) that agrees with the Python route to $10^{-9}$ eV on the same real data — see
-`qe_native/README.md`. The Wannier90 route is written and cross-validated against the group's
+`qe_native/README.md`. The Wannier90 route is written and cross-validated against our
 real Cr2SeAs model. The defumat route is not started. `PLAN.md`'s phase list (P0-P9) is the
 map of what's open and what each open thing is waiting on — P5 (ecutwfc/k-density convergence)
 and P7 (defumat) are the largest gaps.
@@ -117,7 +117,7 @@ and P7 (defumat) are the largest gaps.
   detail.
 - **Self-consistency on the k-mesh the harmonics are fit on is a noise source, not a detail.**
   A frozen-density (non-self-consistent) run is the default assumption for the QE route; if a
-  self-consistent alternative is ever used, say so next to the result, because the group has
+  self-consistent alternative is ever used, say so next to the result, because we have
   already measured a ≈9 meV noise floor from doing that on a related calculation, against a
   ≈1 meV splitting.
 - **No conversion factor is a bare literal.** `27.211386245988` belongs in `units.py` once;

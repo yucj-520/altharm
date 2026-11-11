@@ -108,7 +108,7 @@ def test_three_routes_agree_on_the_leading_harmonic_ordering(routes):
     assert order_qe[:2] == [3, 9], "l=3 then l=9 should lead"
 
 
-# --- the production density (12x12x4), the mesh the group actually uses ---
+# --- the production density (12x12x4), the mesh actually used in production ---
 
 FULL = HERE / "data" / "defumat_p7" / "defumat_full.pkl"
 QE_PROD = HERE / "data" / "qe_cr2seas_dense" / "data-file-schema.xml"
@@ -136,7 +136,7 @@ def test_production_mesh_scf_agrees_with_qe(production):
 
 
 def test_production_mesh_harmonics_agree(production):
-    """0.21% worst case on the density the group publishes from."""
+    """0.21% worst case on the production density."""
     (a_qe, _), (a_dfm, _), _, _, _ = production
     dev = {l: abs(a_dfm[l] - a_qe[l]) / a_qe[l] for l in ALLOWED}
     assert max(dev.values()) < 0.004, f"worst {max(dev, key=dev.get)}: {max(dev.values()):.4f}"

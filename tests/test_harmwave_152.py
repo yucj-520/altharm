@@ -1,4 +1,4 @@
-"""harmwave.x rerun on the group's best (152-point) data.
+"""harmwave.x rerun on our best (152-point) data.
 
 The original cross-check (test_harmwave_cross_check.py) used the earlier
 56-point circle at lmax=12. This is the same independent-implementation

@@ -93,7 +93,7 @@ def test_the_discontinuity_does_not_shrink_smoothly_with_cutoff():
 def test_the_production_cutoff_is_the_worst_in_its_range():
     """The finding that motivated the P5 DFT runs.
 
-    60 Ry -- the cutoff the group's production setup uses -- measures 1167 ppm,
+    60 Ry -- the cutoff our production setup uses -- measures 1167 ppm,
     the largest value anywhere in 50-100 Ry, while 66 Ry measures 14.5 ppm for
     only ~15% more plane waves. If the plane-wave discontinuity is what sets
     the even-l noise floor, that is an 80x improvement available for almost

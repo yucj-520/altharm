@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 
 import numpy as np
+from ase.data import atomic_numbers
 
 from ..units import HARTREE_EV, BOHR_ANG
 
@@ -317,3 +318,130 @@ def require_hubbard(xml_path, expected=None, tol: float = 1e-6):
                     f"{xml_path}: U on '{label}' is {hit[0]} eV, expected {u_ev} eV"
                 )
     return found
+
+
+@dataclass
+class QEStructure:
+    """The crystal and its collinear magnetic order, read from the same XML.
+
+    This is what :func:`altharm.symmetry.spin_operations` needs, and reading it
+    from the run itself is the point: the alternative is retyping the cell,
+    positions and sublattice assignment by hand next to the calculation they
+    came from, which is a transcription error waiting to change which `l` come
+    out allowed.
+
+    Attributes
+    ----------
+    cell_ang : ndarray, shape (3, 3)
+        Lattice vectors as rows, Angstrom.
+    scaled_positions : ndarray, shape (n, 3)
+        Fractional coordinates.
+    numbers : ndarray, shape (n,), int
+        Atomic numbers of the NON-magnetic parent, i.e. the two sublattices of
+        an altermagnet share a number even though QE gives them distinct
+        species labels. See :func:`element_of_label`.
+    magmoms : ndarray, shape (n,)
+        QE's ``starting_magnetization`` for each atom's species. Only the signs
+        reach the symmetry analysis, which is why the starting values are
+        enough and the converged per-site moments (which QE does not write to
+        this file) are not needed.
+    labels : list[str]
+        The species label QE used, per atom -- ``CrU``/``CrD`` and so on. Kept
+        because it is what makes the sublattice assignment auditable.
+    """
+
+    cell_ang: np.ndarray
+    scaled_positions: np.ndarray
+    numbers: np.ndarray
+    magmoms: np.ndarray
+    labels: list
+
+
+def element_of_label(label: str) -> int:
+    """QE species label -> atomic number of the underlying element.
+
+    An altermagnet's two sublattices have to be distinct *species* in the input
+    so they can carry opposite ``starting_magnetization``, so the labels are
+    the element symbol plus a suffix: ``CrU``/``CrD``, ``Fe1``/``Fe2``, ``Mn_a``.
+    The symmetry analysis wants the non-magnetic parent, where both are just Cr.
+
+    The two-character symbol is tried before the one-character one, which is the
+    rule that makes ``Co`` cobalt rather than carbon-with-a-suffix. A label whose
+    first characters are not an element symbol raises rather than guessing.
+    """
+    s = str(label).strip()
+    for n in (2, 1):
+        if len(s) >= n:
+            cand = s[:n].capitalize()
+            if cand in atomic_numbers:
+                return int(atomic_numbers[cand])
+    raise ValueError(
+        f"cannot read an element symbol off the species label {label!r}; "
+        "pass numbers= explicitly"
+    )
+
+
+def read_structure(xml_path) -> QEStructure:
+    """Parse the cell, positions and collinear moments out of the same XML.
+
+    Positions are stored Cartesian in Bohr under ``<output><atomic_structure>``;
+    the moments come from ``<input><atomic_species><starting_magnetization>``,
+    matched to atoms by species label.
+    """
+    xml_path = str(xml_path)
+    root = ET.parse(xml_path).getroot()
+
+    output = _require(root, "output", xml_path, _local(root.tag))
+    atomic_structure = _require(output, "atomic_structure", xml_path, "output")
+
+    cell = _require(atomic_structure, "cell", xml_path, "atomic_structure")
+    cell_ang = np.array(
+        [_floats(_require(cell, name, xml_path, "cell")) for name in ("a1", "a2", "a3")]
+    ) * BOHR_ANG
+
+    positions = _require(atomic_structure, "atomic_positions", xml_path, "atomic_structure")
+    atoms = [c for c in positions if _local(c.tag) == "atom"]
+    if not atoms:
+        raise ValueError(f"<atomic_positions> holds no <atom> elements in {xml_path}")
+
+    labels = [a.get("name") for a in atoms]
+    if any(name is None for name in labels):
+        raise ValueError(f"an <atom> has no 'name' attribute in {xml_path}")
+    cart_ang = np.array([_floats(a) for a in atoms]) * BOHR_ANG
+    if cart_ang.shape[1] != 3:
+        raise ValueError(
+            f"<atom> entries have {cart_ang.shape[1]} components, expected 3 ({xml_path})"
+        )
+    scaled = cart_ang @ np.linalg.inv(cell_ang)
+
+    # starting_magnetization lives under <input>, per species, not per atom.
+    inp = _child(root, "input")
+    if inp is None:
+        raise ValueError(
+            f"no <input> section in {xml_path}, so starting_magnetization cannot be "
+            "read; pass magmoms= explicitly"
+        )
+    species = _require(inp, "atomic_species", xml_path, "input")
+    mag_by_label = {}
+    for c in species:
+        if _local(c.tag) != "species":
+            continue
+        sm = _child(c, "starting_magnetization")
+        mag_by_label[c.get("name")] = 0.0 if sm is None else float(sm.text)
+
+    missing = sorted({name for name in labels if name not in mag_by_label})
+    if missing:
+        raise ValueError(
+            f"species {missing} appear in <atomic_positions> but not in "
+            f"<input><atomic_species> of {xml_path}"
+        )
+    magmoms = np.array([mag_by_label[name] for name in labels], dtype=float)
+    numbers = np.array([element_of_label(name) for name in labels], dtype=int)
+
+    return QEStructure(
+        cell_ang=cell_ang,
+        scaled_positions=scaled,
+        numbers=numbers,
+        magmoms=magmoms,
+        labels=list(labels),
+    )

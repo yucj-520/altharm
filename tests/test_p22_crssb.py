@@ -3,7 +3,7 @@ explanation for it was wrong.
 
 Job 20820707. Cr2S2Sb is the sister compound of Cr2Se2As: same structure type
 (4 Cr + 4 chalcogen + 2 pnictogen, same Wyckoff pattern), different chemistry,
-structure taken from the group's own tree. Settings identical to P12's
+structure taken from our own tree. Settings identical to P12's
 Cr2Se2As runs except two deliberate improvements from this project's own
 findings -- degauss 0.0150 rather than 0.0037 (P3) and N = 151 rather than 152,
 coprime to the allowed-set period (P14).

@@ -1,7 +1,7 @@
 """P3, resolved: a denser circle separates real high-l signal from the
 56-point circle's finite-k artefact.
 
-Independence rule: the reference is the group's Wannier model, an entirely
+Independence rule: the reference is our Wannier model, an entirely
 separate calculation (tight-binding fit to a different plane-wave run),
 compared harmonic by harmonic across all eight allowed l up to 45 -- not
 just the leading two.

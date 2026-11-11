@@ -1,4 +1,4 @@
-"""Cr2SeAs: the harmonics of the spin splitting, from the group's Wannier model.
+"""Cr2SeAs: the harmonics of the spin splitting, from our Wannier model.
 
 This is the first real material the package has been pointed at, and it doubles
 as a cross-check: the symmetry module predicts which harmonics may be non-zero

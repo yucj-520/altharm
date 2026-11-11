@@ -10,7 +10,7 @@ P3's 27 ueV noise floor).
 Two densities, both self-consistently converged to 1e-10 Ry, both then used for
 an identical frozen-density 152-point bands run on the same circle:
 
-  * 12x12x4 (69 irreducible k-points) -- the group's production mesh
+  * 12x12x4 (69 irreducible k-points) -- our production mesh
   *  6x6x2  (14 irreducible k-points) -- deliberately coarse
 
 These are NOT two samples of the same quantity with noise between them. The

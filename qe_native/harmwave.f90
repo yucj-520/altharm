@@ -20,7 +20,7 @@ PROGRAM harmwave
   !      on a copy of the structure where the two magnetic sublattices are
   !      collapsed back to one chemical species (their true element, read
   !      from the pseudopotential's own psd field -- NOT from ityp, since
-  !      this group's convention is to give the two sublattices distinct
+  !      the convention here is to give the two sublattices distinct
   !      ATOMIC_SPECIES entries so LSDA can start them with opposite
   !      starting_magnetization, and find_sym() would otherwise never let a
   !      symmetry operation map one onto the other).

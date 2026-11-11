@@ -208,7 +208,7 @@ def symprec_scan(cell, scaled_positions, numbers, magmoms,
     that makes the material an altermagnet at all, and it is often the first
     casualty of a tight tolerance.
 
-    Measured on the group's Cr2Se2As model, the parent is reported as P3m1 with
+    Measured on our Cr2Se2As model, the parent is reported as P3m1 with
     six operations and *no* exchanging operation at symprec <= 1e-5, and as
     P-6m2 with six of each at symprec >= 5e-5.  The horizontal mirror maps every
     atom onto its partner to within 1.0e-5 Angstrom, which is exactly the

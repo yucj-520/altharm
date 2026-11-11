@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install ".[dev]"
+      - name: Command line
+        run: |
+          altharm --help
+          altharm tests/data/qe_cr2seas_sm24/data-file-schema.xml
+      - name: Tests
+        run: pytest -q

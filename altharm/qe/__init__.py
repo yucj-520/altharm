@@ -14,7 +14,8 @@ See :mod:`altharm.qe.writer` for building the pw.x input (and why
 from __future__ import annotations
 
 from .writer import kpoints_card, cart_to_tpiba, tpiba_to_cart, bands_input
-from .reader import hubbard_is_active, require_hubbard, QEBands, read_bands, spin_splitting
+from .reader import (hubbard_is_active, require_hubbard, QEBands, read_bands,
+                     spin_splitting, QEStructure, read_structure, element_of_label)
 
 __all__ = [
     "kpoints_card",
@@ -24,4 +25,5 @@ __all__ = [
     "QEBands",
     "read_bands", "hubbard_is_active", "require_hubbard",
     "spin_splitting",
+    "QEStructure", "read_structure", "element_of_label",
 ]

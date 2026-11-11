@@ -1,16 +1,20 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
 name = "altharm"
-version = "0.0.1"
-description = "Angular harmonics of altermagnetic spin splitting, direct from plane-wave DFT"
+version = "0.1.0"
+description = "Angular harmonics of the altermagnetic spin splitting, directly from plane-wave DFT"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "Cuiju Yu" }]
+keywords = ["altermagnet", "spin splitting", "angular harmonics", "DFT", "Quantum ESPRESSO", "Wannier90"]
 classifiers = [
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Physics",
 ]
@@ -25,5 +29,17 @@ dependencies = [
 dev = ["pytest>=7"]
 plot = ["matplotlib>=3.8"]
 
+[project.urls]
+Homepage = "https://github.com/yucj-520/altharm"
+Documentation = "https://yucj-520.github.io/altharm/"
+Repository = "https://github.com/yucj-520/altharm"
+Issues = "https://github.com/yucj-520/altharm/issues"
+
+[project.scripts]
+altharm = "altharm.__main__:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["altharm"]
+
+[tool.hatch.build.targets.sdist]
+include = ["altharm", "qe_native", "examples", "README.md", "NOTES.md", "LICENSE", "CITATION.cff"]

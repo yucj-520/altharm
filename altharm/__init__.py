@@ -10,9 +10,10 @@ from .noise import NoiseReport, noise_report
 from .symmetry import SymmetryToleranceError, symprec_scan, format_symprec_scan
 from .bandtrack import TrackedBand, track_by_continuity
 from .planewaves import count_planewaves, parse_pw_count, discontinuity_spectrum
+from .analyze import CircleGeometry, HarmonicAnalysis, circle_frame, analyze_qe
 from . import wannier, qe
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "CircularBasis", "SphericalBasis", "real_sph_harm",
@@ -23,5 +24,6 @@ __all__ = [
     "SymmetryToleranceError", "symprec_scan", "format_symprec_scan",
     "TrackedBand", "track_by_continuity",
     "count_planewaves", "parse_pw_count", "discontinuity_spectrum",
+    "CircleGeometry", "HarmonicAnalysis", "circle_frame", "analyze_qe",
     "wannier", "qe",
 ]

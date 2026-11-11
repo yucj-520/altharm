@@ -10,7 +10,7 @@ size of the correction, so no later phase quietly picks up an old number.
 (12x12x4 at the same smearing) is within 1.2% median / 2.1% worst of it, which
 is what makes the correction affordable.
 
-The third column is the part that matters for the group's published work: the
+The third column is the part that matters for our published work: the
 Wannier model was fitted to DFT at the OLD settings, so it inherits the same
 error.  P6's "<1% agreement at all eight harmonics" was therefore agreement on a
 *shared* error, not evidence of absolute accuracy -- a distinction that only
@@ -42,7 +42,7 @@ pytestmark = pytest.mark.skipif(
 BAND, LMAX = 44, 45
 ALLOWED = (3, 9, 15, 21, 27, 33, 39, 45)
 
-# The group's Wannier model, fitted to DFT at the OLD settings.
+# Our Wannier model, fitted to DFT at the OLD settings.
 WANNIER_MEV = {3: 59.4812, 9: 39.0640, 15: 3.1750, 21: 8.4434,
                27: 1.4946, 33: 2.8382, 39: 0.9964, 45: 1.1423}
 
@@ -110,7 +110,7 @@ def test_the_wannier_model_inherits_the_same_error():
 
     The Wannier model was fitted to DFT at the old settings, so it sits with the
     old DFT numbers, not with the corrected ones.  This is the single most
-    important consequence of P3's smearing result for the group's published work.
+    important consequence of P3's smearing result for our published work.
     """
     old, _, _ = _fit(OLD)
     # Wannier still agrees with the OLD DFT to ~1%, as P6 reported

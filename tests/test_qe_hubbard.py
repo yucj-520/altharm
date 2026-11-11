@@ -1,7 +1,7 @@
 """The HUBBARD card, and checking it survived into the run that used it.
 
 Independence rule: the card's text is checked against the syntax QE documents
-and against the group's own working `scf.in`, written by hand before this code
+and against our own working `scf.in`, written by hand before this code
 existed; the "no U applied" case is checked against a real pw.x XML from a run
 that genuinely had no U.
 """
@@ -39,7 +39,7 @@ def make(**kw):
 def test_hubbard_card_matches_the_documented_syntax():
     """`HUBBARD (projector)` then one `U <label> <value>` per manifold.
 
-    The reference is the group's own working scf.in, which reads
+    The reference is our own working scf.in, which reads
         HUBBARD (ortho-atomic)
           U CrU-3d 3.0
           U CrD-3d 3.0

@@ -71,7 +71,7 @@ set, and the $d$-wave form recovered rather than assumed. $S^2=S$ holds to $2\ti
 and every Cartesian rotation is orthogonal to $10^{-10}$ on a hexagonal cell, which is the
 guard against the metric convention being wrong.
 
-On the group's real Cr2Se2As the allowed set at $k_z \ne 0$ came out
+On our real Cr2Se2As the allowed set at $k_z \ne 0$ came out
 $\{3, 9, 15, 21, 27, 33, 39, 45\}$ — the odd multiples of three — and **nothing at all** in
 the $k_z = 0$ plane. Both follow by hand: $C_{3z}$ preserves the sublattices so $l$ must be a
 multiple of 3; $M_z$ exchanges them and, combined with time reversal, gives $C_{2z}$ with
@@ -106,7 +106,7 @@ returning garbage.
 
 **Establishes:** how far a frozen-density, non-self-consistent QE run
 (`calculation='bands'` from an already-converged charge density) reduces the eigenvalue noise
-the group measured from re-converging self-consistently on a band/circle k-mesh — a VASP
+we measured from re-converging self-consistently on a band/circle k-mesh — a VASP
 `ICHARG=1` run gave ≈9 meV of noise against a ≈1 meV altermagnetic splitting there, noise
 several times the signal. This phase decides whether the DFT route is usable at all, before any
 of the later phases are worth running.
@@ -139,8 +139,8 @@ and keeping `celldm(1)`, since `celldm(1)` is what defines `tpiba`.
 itself part of the record.**
 
 The first pass used band index 22 (0-based) because that was the "band nearest $E_F$" index
-found earlier for the group's *Wannier* model, which has 38 bands. This DFT run has 80
-(16 semicore + 6 Se/As-4s + 38 p-d + 20 buffer, exactly matching the group's own comment in
+found earlier for our *Wannier* model, which has 38 bands. This DFT run has 80
+(16 semicore + 6 Se/As-4s + 38 p-d + 20 buffer, exactly matching our own comment in
 `nscf.in`), so band 22 there is a deep, nearly dispersionless semicore state 4.4 eV below
 $E_F$ -- not the band this project cares about, and its splitting is trivially near zero. That
 made the noise floor measured on it look spectacular (0.106 μeV) for the wrong reason: there
@@ -194,7 +194,7 @@ $l=3,9,15,21,27,33,39,45$, not only the leading two) and the even-forbidden floo
 as clean as before. That is the signature of finite-$k$ aliasing shrinking with more points, not
 of a fixed numerical noise floor that would not care how many k-points were used. **P3's
 headline number, properly measured this time:** noise floor 27.5 μeV RMS, worst single
-harmonic 86 μeV, against the group's ~9 meV self-consistent-on-mesh floor — over two orders of
+harmonic 86 μeV, against our ~9 meV self-consistent-on-mesh floor — over two orders of
 magnitude better, on the physically relevant band, with the signal it is being compared against
 independently confirmed rather than assumed. The residual beyond $l=45$ (0.80 meV) is not part
 of the floor — it is real unresolved structure, consistent with the Wannier route needing
@@ -304,7 +304,7 @@ The two 24x24x8 runs differ 4x in smearing yet agree to 0.1-1.7%, so the smearin
 negligible there: **the converged $l=3$ is 64.3 meV**. The noise floor is unaffected throughout
 (27.5 / 24.3 / 25.1 / 23.6 μeV).
 
-**What this costs the group's current setup.** 12x12x4 at degauss 0.0037 underestimates $l=3$
+**What this costs our current setup.** 12x12x4 at degauss 0.0037 underestimates $l=3$
 by **8%** and the weak harmonics by over 20%. The cheap fix is `degauss = 0.015` at the same
 mesh, which lands within 1-2% of converged for the price of a normal run; 24x24x8 at either
 smearing is the reference. Pinned in `tests/test_p3_smearing.py`.
@@ -339,7 +339,7 @@ different circle radii at one `ecutwfc`) and see whether the resulting artefact 
 moves the way a plane-wave-counting argument predicts — a genuinely physical high-$l$ signal
 would not move with `ecutwfc` at all.
 
-**Measured, on the group's real Cr2Se2As circle** (56 k-points, $k_z = 0.25\,b_3$,
+**Measured, on our real Cr2Se2As circle** (56 k-points, $k_z = 0.25\,b_3$,
 `ecutwfc = 60` Ry): the plane-wave count steps between 10770 and 10801 around the circle -- a
 peak-to-trough swing of 31 out of ~10800, about 0.3%. Its own angular harmonic spectrum
 (`altharm.planewaves.discontinuity_spectrum`), fit on the exact same basis as the splitting:
@@ -411,7 +411,7 @@ shell at the cutoff radius is an arithmetic property of that particular radius, 
 that anneals as the basis grows. Raising `ecutwfc` is therefore the *wrong instinct* for this
 noise source: 80 Ry is 67$\times$ dirtier than 66 Ry while costing 33% more plane waves.
 
-**And the production cutoff is the worst one in the range.** 60 Ry — what the group's setup
+**And the production cutoff is the worst one in the range.** 60 Ry — what our setup
 uses — measures 1168 ppm, the maximum anywhere in 50-100 Ry; 66 Ry measures 14.5 ppm for 15%
 more plane waves. That turns P5 from a convergence scan into a **falsifiable prediction**: if
 the plane-wave discontinuity is what sets the even-$l$ floor, a 66 Ry run should show that floor
@@ -438,7 +438,7 @@ now **24x24x8 at `degauss = 0.0150`**, band 44, 152-point circle:
 | old (12x12x4 @ 0.0037) | 59.171 | 38.817 | 3.162 | 8.421 | 1.486 | 2.838 | 0.986 | 1.147 |
 | Wannier (fitted to old) | 59.481 | 39.064 | 3.175 | 8.443 | 1.495 | 2.838 | 0.996 | 1.142 |
 
-Three statements follow, and the third is the one that matters for the group's published work.
+Three statements follow, and the third is the one that matters for our published work.
 
 1. **The correction is large and not a rescaling:** median 12.9%, worst 26.3% ($l=27$), with
    $l=33$ and $l=45$ moving the *other* way. No single factor fixes an old number.
@@ -448,7 +448,7 @@ Three statements follow, and the third is the one that matters for the group's p
    still agrees with the *old* DFT to ~1% and sits 12-26% from the corrected reference. P6's
    "<1% at all eight harmonics" was therefore agreement on a **shared error**, not evidence of
    absolute accuracy. Correcting the Wannier side means refitting the wannierisation, which is
-   the group's workflow rather than this repo's.
+   our workflow rather than this repo's.
 
 **And the noise floor paid for none of it** -- 27.49 / 24.30 / 23.61 μeV across the three, a
 range of under 20% while the signal moved 26%. That is precisely why it never warned us, and it
@@ -458,7 +458,7 @@ the fit, not whether the band structure handed to the fit is converged.** Pinned
 
 ## P6 — Wannier cross-check and the truncation study
 
-**Establishes:** two things at once. First, that the QE route and the group's existing
+**Establishes:** two things at once. First, that the QE route and our existing
 Wannier90 route (`hr.dat` interpolation, already validated to 0.07 meV against DFT on Cr2Se2As)
 agree on the allowed-$l$ coefficients, each within the other's noise floor. Second — the part
 that's actually new — exactly how a finite hopping range $R_\mathrm{max}$ damps a chosen
@@ -471,7 +471,7 @@ controlled radius, truncate it at a series of $R_\mathrm{max}$ values, and confi
 damping matches the $J_l(k_0 R_\mathrm{max})$ prediction rather than some other falloff.
 
 **Measured: the truncation half is closed; the QE half is not started.**
-`altharm/wannier.py` reads `hr.dat` and the study has been run on the group's v03 Cr2Se2As
+`altharm/wannier.py` reads `hr.dat` and the study has been run on our v03 Cr2Se2As
 model (38 orbitals per spin, 583 R-vectors, reach 42.6 Å), at $k_z = 0.25\,b_3$ on the band
 nearest $E_F$. Cutting **in-plane** $|R|$ while leaving the c axis intact:
 
@@ -495,8 +495,8 @@ once, the model loses its $k_z$ dependence, and a splitting that lives only at $
 collapses to zero. It looks exactly like truncation killing the harmonics. `truncate` therefore
 takes a `plane_normal`, and the circle's plane should always be passed to it.
 
-**The QE↔Wannier agreement itself: measured, and now exhaustive.** On band 44 of the
-group's real Cr2Se2As run, a 152-point circle (P3) puts the DFT-fitted allowed harmonics within
+**The QE↔Wannier agreement itself: measured, and now exhaustive.** On band 44 of our
+real Cr2Se2As run, a 152-point circle (P3) puts the DFT-fitted allowed harmonics within
 1% of this Wannier model's own fit at **every one of the eight allowed harmonics from $l=3$ to
 $l=45$**: 59.17/59.48 ($l=3$), 38.82/39.06 ($l=9$), 3.16/3.18 ($l=15$), 8.42/8.44 ($l=21$),
 1.49/1.49 ($l=27$), 2.84/2.84 ($l=33$), 0.99/1.00 ($l=39$), 1.15/1.14 meV ($l=45$; DFT/Wannier).
@@ -533,7 +533,7 @@ cleared, and each is worth recording because none was visible from the README.
    fix, and the converter is one we already built: `q-e/upflib/upfconv.x -u`. Cr and Se
    converted; As was already v2. Converted copies live in
    `altharm_runs/defumat_p7/pseudo_v2/`.
-3. **defumat does not implement Grimme-D3**, which the group's production input uses (it has
+3. **defumat does not implement Grimme-D3**, which our production input uses (it has
    D2 only). Rather than rebuild everything under D2 — which would have made two independent
    D2 implementations part of the comparison — this was settled by measurement: a QE bands run
    with `vdw_corr` removed gives **bit-identical eigenvalues**. Grimme's correction depends
@@ -841,7 +841,7 @@ KS states. Pinned in `tests/test_p13_pseudo_and_functional.py`.
 ## P8 — Production: MnTe and CoF2, and where the high harmonics actually are
 
 **Establishes:** the method on materials with independent literature classifications, rather
-than only on the group's own Cr2Se2As where the answer comes from this project.
+than only on our own Cr2Se2As where the answer comes from this project.
 
 **Independent check:** two systems chosen so their symmetry requires **opposite** answers on the
 same plane. MnTe's g-wave form $\Delta E \propto k_z k_\perp^3\cos 3\theta$ vanishes identically at
@@ -893,7 +893,7 @@ on the band nearest $E_F$:
 | MnTe | $l=3$, 949.4 meV | **5.6%** |
 | **Cr2Se2As** | $l=3$, 64.3 meV | **67.6%** |
 
-**The two canonical altermagnets are essentially single-wave; the group's own material is the
+**The two canonical altermagnets are essentially single-wave; our own material is the
 multi-harmonic one** -- its $l=9$ is two thirds of its $l=3$. That is where "the DFT high
 harmonic part would be genuinely new" actually lives, and now with two contrasting references.
 The comparison survives a caveat pointing the other way: CoF2's allowed set steps by 4 rather
@@ -933,7 +933,7 @@ eigenvalues for the fit -- no XML parsing, no spglib, no numpy.
 language, no symmetry engine, no linear-algebra library and no unit-conversion path, run on the
 same real Cr2Se2As data, are compared coefficient by coefficient.
 
-**Measured:** built and validated once, on the group's real Cr2Se2As run (PBE+U, USPP, 56-point
+**Measured:** built and validated once, on our real Cr2Se2As run (PBE+U, USPP, 56-point
 circle at $k_z = 0.25\,b_3$, band nearest $E_F$):
 
 - eigenvalue differences $\Delta E(\theta)$: Fortran (QE's `et`, Ry$\to$eV) vs Python (XML,
@@ -1005,7 +1005,7 @@ belongs once a phase measures it.
   a related VASP `ICHARG=1` calculation, not yet on this project's own QE route) — P3.
 - **Basis-set discontinuity** from `ecutwfc`'s discretely-changing plane-wave count — P4.
 - **`symprec` deciding the physics.** *Measured, and the most dangerous one found so far.* On
-  the group's own Cr2Se2As structure, spglib reports the non-magnetic parent as **P3m1 (#156)
+  our own Cr2Se2As structure, spglib reports the non-magnetic parent as **P3m1 (#156)
   with no sublattice-exchanging operation at all** for `symprec` ≤ 1e-5, and as **P-6m2 (#187)
   with six of them** for `symprec` ≥ 5e-5. The horizontal mirror maps every atom onto its
   partner to within **1.0e-5 Å**, which is spglib's default tolerance — so *the default returns
@@ -1094,7 +1094,7 @@ exponentially small until $k_0 R \sim l$. For Cr2Se2As $k_0 = 0.4868\ \text{Å}^
 | range needed $l/k_0$ (Å) | 6.2 | 18.5 | 30.8 | 43.1 | 55.5 | 67.8 | 80.1 | 92.4 |
 | in unit cells | 1.7 | 5.0 | 8.3 | 11.6 | 14.9 | 18.2 | 21.5 | 24.8 |
 
-The group's model reaches 25.8 Å in plane. By this argument it should produce **nothing** above
+Our model reaches 25.8 Å in plane. By this argument it should produce **nothing** above
 $l\approx 13$.
 
 **The control** (`tests/test_p10_nonlinearity.py`). On one and the same Hamiltonian truncated to
@@ -1880,7 +1880,7 @@ Tests: `tests/test_p21_crps4_twist.py`.
 
 Two questions, one run. Job 20820707: Cr2S2Sb, the sister compound of Cr2Se2As -- same structure
 type (4 Cr + 4 chalcogen + 2 pnictogen, same Wyckoff pattern), different chemistry. Structure
-taken from the group's own tree. Settings identical to P12's Cr2Se2As runs (12×12×4,
+taken from our own tree. Settings identical to P12's Cr2Se2As runs (12×12×4,
 `ecutwfc` 60, $U = 3.0$ ortho-atomic) except two deliberate improvements from this project's own
 findings: `degauss` **0.0150** rather than the author's 0.0037 (P3), and **$N = 151$** rather
 than 152, coprime to the allowed-set period (P14).
