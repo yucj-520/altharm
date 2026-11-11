@@ -65,7 +65,7 @@ def _sphere():
 
 
 def _ops():
-    txt = (Path("/scratch/work/yuc11/altharm_runs/hw_yz/bands.in")).read_text().splitlines()
+    txt = (DATA / "sphere" / "structure.in").read_text().splitlines()
     i = next(n for n, l in enumerate(txt) if "CELL_PARAMETERS" in l)
     cell = np.array([[float(x) for x in txt[i + 1 + j].split()] for j in range(3)]) * 7.040816482142
     j = next(n for n, l in enumerate(txt) if "ATOMIC_POSITIONS" in l)

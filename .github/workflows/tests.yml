@@ -24,4 +24,9 @@ jobs:
           altharm --help
           altharm tests/data/qe_cr2seas_sm24/data-file-schema.xml
       - name: Tests
-        run: pytest -q
+        run: |
+          set +e
+          pytest -q -rfE 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          grep -E "^(FAILED|ERROR) " pytest.log | head -20 | while read -r line; do echo "::error::${line:0:300}"; done
+          exit $status
